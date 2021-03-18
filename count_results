@@ -1,7 +1,11 @@
 Version 1 -- when there is a conflict you get to know and lose a move
 was counting for 23 hours
 29981389219 ~= 3*10^10 states
+2seconds
+with symetry - 86413 states
 
 Version 2 -- when there is a conflict you get to know and DO NOT lose a move
 was counting for 12 hours
 19934533171 ~= 2*10^10 states
+3 seconds
+with symetry - 65287 states

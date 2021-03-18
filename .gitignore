@@ -31,3 +31,7 @@
 *.out
 *.app
 states_counter
+simulator
+
+# Visual Code files
+.vscode

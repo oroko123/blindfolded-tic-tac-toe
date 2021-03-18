@@ -1,143 +1,90 @@
+#include "board.h"
+#include "constants.h"
+#include "state.h"
 #include <bits/stdc++.h>
+
 using namespace std;
 
-enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
-enum Player { PLAYER1, PLAYER2, NONE };
+typedef struct CountingResult {
+  CountingResult(long long full_count_, long long non_izometric_count_)
+      : full_count(full_count_), non_izometric_count(non_izometric_count_) {}
+  long long full_count;
+  long long non_izometric_count;
+} CountingResultT;
 
-const int FIELDS_NUM = 9;
-
-constexpr Player getOppositePlayer(Player player) {
-  if (player == PLAYER1) {
-    return PLAYER2;
-  } else if (player == PLAYER2) {
-    return PLAYER1;
-  } else {
-    return NONE;
-  }
-}
-
-class Board {
+class Counter {
 public:
-  Board() : fields(FIELDS_NUM, NONE) {}
-  Board(const vector<Player> fields_) : fields(fields_) {
-    assert(fields.size() == FIELDS_NUM);
+  Counter() : progress_bar(0, 0), last_printed(0, 0) {
+    start = std::chrono::high_resolution_clock::now();
   }
-  Result getResult() const {
-    vector<int> playersWinningSets = {0, 0, 0};
-    for (auto player : {PLAYER1, PLAYER2}) {
-      for (const auto &winning_set : winning_sets) {
-        bool not_winning = false;
-        for (int field : winning_set) {
-          if (fields[field] != player) {
-            not_winning = true;
-            break;
-          }
-        }
-        if (!not_winning) {
-          playersWinningSets[player]++;
-        }
+  CountingResultT countSymetricStatesInSubtree(const GameState &state) {
+    CountingResultT counting_res(1, 1);
+    for (const auto symetric_state : state.getSymetricHistoriesKeys()) {
+      if (states_in_subtree.find(symetric_state) != states_in_subtree.end()) {
+        cout << "Found symetry between states: " << endl;
+        state.printBoard();
+        return {states_in_subtree.at(symetric_state), 0};
       }
     }
-    if (playersWinningSets[PLAYER1] > 0 && playersWinningSets[PLAYER2] > 0) {
-      return INVALID;
-    } else if (playersWinningSets[PLAYER1] == 1) {
-      return PLAYER1WIN;
-    } else if (playersWinningSets[PLAYER2] == 1) {
-      return PLAYER2WIN;
+    Result res = state.getResult();
+    if (res == INVALID) {
+      state.printBoard();
+      cerr << "BOARD IS INVALID" << endl;
+      exit(0);
+    }
+    if (res != ONGOING) {
+      return counting_res;
     } else {
-      int fields_taken = 0;
-      for (int field : fields) {
-        if (field != NONE) {
-          fields_taken++;
-        }
+      for (int move : state.getPossibleMoves()) {
+        CountingResultT subres =
+            countSymetricStatesInSubtree(state.performMove(move));
+        counting_res.full_count += subres.full_count;
+        counting_res.non_izometric_count += subres.non_izometric_count;
+        progress_bar.full_count += subres.full_count;
+        progress_bar.non_izometric_count += subres.non_izometric_count;
       }
-      return (fields_taken == FIELDS_NUM) ? TIE : ONGOING;
-    }
-  }
-  Player getField(int field) const { return fields[field]; }
-  void setField(int field, Player player) { fields[field] = player; }
-  vector<int> getFreeFields() const {
-    vector<int> ret;
-    for (int i = 0; i < fields.size(); i++) {
-      if (fields[i] == NONE) {
-        ret.push_back(i);
+      states_in_subtree[state.getHistoryKey()] = counting_res.full_count;
+
+      if (progress_bar.full_count > 2 * last_printed.full_count) {
+        last_printed = progress_bar;
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        cout << "Elapsed time: " << elapsed.count() << " s\n";
+        cout << "Full count: " << progress_bar.full_count
+             << " Izometric: " << progress_bar.non_izometric_count << endl;
       }
+
+      progress_bar.full_count -= counting_res.full_count;
+      progress_bar.non_izometric_count -= counting_res.non_izometric_count;
     }
-    return ret;
+    return counting_res;
   }
-  void print() const {
-    cout << fields[0] << " " << fields[1] << " " << fields[2] << endl;
-    cout << fields[3] << " " << fields[4] << " " << fields[5] << endl;
-    cout << fields[6] << " " << fields[7] << " " << fields[8] << endl;
-    cout << endl;
+
+  long long countStatesInSubtree(const GameState &state) {
+    Result res = state.getResult();
+    if (res == INVALID) {
+      state.printBoard();
+      cerr << "BOARD IS INVALID" << endl;
+      exit(0);
+    }
+    long long count = 1;
+    if (res != ONGOING) {
+      return count;
+    } else {
+      vector<int> possibleMoves = state.getPossibleMoves();
+      for (int move : possibleMoves) {
+        count += countStatesInSubtree(state.performMove(move));
+      }
+      return count;
+    }
   }
 
 private:
-  vector<Player> fields;
-  static const vector<vector<int>> winning_sets;
+  map<HistoryKey, long long> states_in_subtree;
+  CountingResultT progress_bar;
+  CountingResultT last_printed;
+  std::chrono::_V2::system_clock::time_point start;
 };
-
-const vector<vector<int>> Board::winning_sets = {
-    {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6},
-    {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6}};
-
-class GameState {
-public:
-  GameState(bool lose_move_)
-      : judge_board(Board()), players_boards({Board(), Board()}),
-        player_turn(PLAYER1), lose_move(lose_move_) {}
-  GameState(const Board &judge_board_, const Board &player1_board,
-            const Board &player2_board, Player player_turn_, bool lose_move_)
-      : judge_board(judge_board_),
-        players_boards({player1_board, player2_board}),
-        player_turn(player_turn_), lose_move(lose_move_) {}
-  vector<int> getPossibleMoves() const {
-    return players_boards[player_turn].getFreeFields();
-  }
-  Result getResult() const { return judge_board.getResult(); }
-  GameState performMove(int field) const {
-    GameState newState = *this;
-    Player field_owner = judge_board.getField(field);
-    assert(field_owner != player_turn);
-    if (field_owner == NONE) {
-      newState.judge_board.setField(field, player_turn);
-      newState.players_boards[player_turn].setField(field, player_turn);
-      newState.player_turn = getOppositePlayer(player_turn);
-    } else {
-      newState.players_boards[player_turn].setField(field, field_owner);
-      if (lose_move) {
-        newState.player_turn = getOppositePlayer(player_turn);
-      }
-    }
-    return newState;
-  }
-  void printBoard() const { judge_board.print(); }
-
-private:
-  Board judge_board;
-  vector<Board> players_boards;
-  Player player_turn;
-  bool lose_move;
-};
-
-long long countStatesInSubtree(const GameState &state) {
-  Result res = state.getResult();
-  if (res == INVALID) {
-    state.printBoard();
-    cerr << "BOARD IS INVALID" << endl;
-    exit(0);
-  }
-  long long count = 1;
-  if (res != ONGOING) {
-    return count;
-  } else {
-    vector<int> possibleMoves = state.getPossibleMoves();
-    for (int move : possibleMoves) {
-      count += countStatesInSubtree(state.performMove(move));
-    }
-    return count;
-  }
-}
 
 class LoseMoveWhenConflictGameState : public GameState {
 public:
@@ -164,7 +111,9 @@ void test_1() {
   Board board(
       {PLAYER1, PLAYER2, PLAYER2, NONE, PLAYER1, NONE, NONE, NONE, PLAYER1});
   LoseMoveWhenConflictGameState state(board, board, board, PLAYER1);
-  assert(countStatesInSubtree(state) == 1);
+  Counter counter;
+  assert(counter.countStatesInSubtree(state) == 1);
+  assert(counter.countSymetricStatesInSubtree(state).full_count == 1);
 }
 
 void test_2() {
@@ -173,9 +122,18 @@ void test_2() {
   Board player1board({PLAYER2, NONE, PLAYER1, PLAYER1, PLAYER2, NONE, PLAYER2,
                       PLAYER1, PLAYER1});
   LoseMoveWhenConflictGameState state(board, player1board, board, PLAYER1);
-  int count = countStatesInSubtree(state);
+  Counter counter;
+  int count = counter.countStatesInSubtree(state);
   if (count != 4) {
     cout << "Test 2 failed." << endl;
+    cout << "Is: " << count << endl;
+    cout << "Should be : 4" << endl;
+    state.printBoard();
+    exit(0);
+  }
+  count = counter.countSymetricStatesInSubtree(state).full_count;
+  if (count != 4) {
+    cout << "Test 2  with symetry failed." << endl;
     cout << "Is: " << count << endl;
     cout << "Should be : 4" << endl;
     state.printBoard();
@@ -189,7 +147,17 @@ void test_3() {
   Board player2board({NONE, PLAYER2, NONE, NONE, NONE, NONE, NONE, NONE, NONE});
   LoseMoveWhenConflictGameState state(board, player1board, player2board,
                                       PLAYER1);
-  cout << "Test 3: " << countStatesInSubtree(state) << endl;
+  Counter counter;
+  auto start = std::chrono::high_resolution_clock::now();
+  cout << "Test 3: " << counter.countStatesInSubtree(state) << endl;
+  auto mid = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = mid - start;
+  cout << "Elapsed time: " << elapsed.count() << " s\n";
+  cout << "Test 3 with symetry: "
+       << counter.countSymetricStatesInSubtree(state).full_count << endl;
+  auto end = std::chrono::high_resolution_clock::now();
+  elapsed = end - mid;
+  cout << "Elapsed time: " << elapsed.count() << " s\n";
 }
 
 void test_4() {
@@ -198,18 +166,52 @@ void test_4() {
   Board player2board({NONE, PLAYER2, NONE, NONE, NONE, NONE, NONE, NONE, NONE});
   DoNotLoseMoveWhenConflictGameState state(board, player1board, player2board,
                                            PLAYER1);
-  cout << "Test 4: " << countStatesInSubtree(state) << endl;
+  Counter counter;
+  auto start = std::chrono::high_resolution_clock::now();
+  cout << "Test 4: " << counter.countStatesInSubtree(state) << endl;
+  auto mid = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = mid - start;
+  cout << "Elapsed time: " << elapsed.count() << " s\n";
+  cout << "Test 4 with symetry: "
+       << counter.countSymetricStatesInSubtree(state).full_count << endl;
+  auto end = std::chrono::high_resolution_clock::now();
+  elapsed = end - mid;
+  cout << "Elapsed time: " << elapsed.count() << " s\n";
 }
 
-void test_lose_move() {
-  LoseMoveWhenConflictGameState initialGameState;
-  cout << "Test lose move: " << countStatesInSubtree(initialGameState) << endl;
+void test_5() {
+  Board board({PLAYER1, NONE, NONE, NONE, PLAYER2, NONE, NONE, NONE, PLAYER1});
+  Board player1board(
+      {PLAYER1, NONE, NONE, NONE, PLAYER2, NONE, NONE, NONE, PLAYER1});
+  Board player2board(
+      {PLAYER1, NONE, NONE, NONE, PLAYER2, NONE, NONE, NONE, PLAYER1});
+  DoNotLoseMoveWhenConflictGameState state(board, player1board, player2board,
+                                           PLAYER2);
+  Counter counter;
+  auto start = std::chrono::high_resolution_clock::now();
+  cout << "Test 5 with symetry: "
+       << counter.countSymetricStatesInSubtree(state).full_count << endl;
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  cout << "Elapsed time: " << elapsed.count() << " s\n";
 }
 
 void test_do_not_lose_move() {
   DoNotLoseMoveWhenConflictGameState initialGameState;
-  cout << "Test do not lose move: " << countStatesInSubtree(initialGameState)
-       << endl;
+  Counter counter;
+  auto res = counter.countSymetricStatesInSubtree(initialGameState);
+  cout << "Test do not lose move: " << endl;
+  cout << "Full count: " << res.full_count << endl;
+  cout << "Non izometric states: " << res.non_izometric_count << endl;
+}
+
+void test_lose_move() {
+  LoseMoveWhenConflictGameState initialGameState;
+  Counter counter;
+  auto res = counter.countSymetricStatesInSubtree(initialGameState);
+  cout << "Test lose move: " << endl;
+  cout << "Full count: " << res.full_count << endl;
+  cout << "Non izometric states: " << res.non_izometric_count << endl;
 }
 
 int main() {
@@ -217,7 +219,8 @@ int main() {
   // test_2();
   // test_3();
   // test_4();
-  // test_lose_move();
-  // test_do_not_lose_move();
+  // test_5();
+  test_do_not_lose_move();
+  test_lose_move();
   return 0;
 }
