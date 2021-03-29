@@ -7,19 +7,17 @@
 using namespace std;
 
 struct HistoryKey {
-  long long first_sixth;
-  long long seventh_twelfth;
-  long long thirteen;
+  long long first_ninth;
+  long long tenth_eighteen;
 };
 
+typedef long long PlayerKey;
+
 bool operator<(const HistoryKey &lhs, const HistoryKey &rhs) {
-  if (lhs.first_sixth < rhs.first_sixth) {
+  if (lhs.first_ninth < rhs.first_ninth) {
     return true;
   }
-  if (lhs.seventh_twelfth < rhs.seventh_twelfth) {
-    return true;
-  }
-  return lhs.thirteen < rhs.thirteen;
+  return lhs.tenth_eighteen < rhs.tenth_eighteen;
 }
 
 class GameState {
@@ -27,7 +25,9 @@ public:
   GameState(bool lose_move_)
       : judge_board(Board()), players_boards({Board(), Board()}),
         player_turn(PLAYER1), lose_move(lose_move_) /*,  key(0) */,
-        history_key({0, 0, 0}) {}
+        history_key({0, 0}) {
+    player1_key = 0;
+  }
   GameState(const Board &judge_board_, const Board &player1_board,
             const Board &player2_board, Player player_turn_, bool lose_move_)
       : judge_board(judge_board_),
@@ -35,6 +35,7 @@ public:
         player_turn(player_turn_), lose_move(lose_move_) {
     // key = generateKey();
     history_key = generateHistoryKey();
+    player1_key = generateFirstPlayerKey();
   }
   vector<int> getPossibleMoves() const {
     return players_boards[player_turn].getFreeFields();
@@ -57,15 +58,18 @@ public:
     newState.history.push_back(make_pair(field, player_turn));
     // newState.updateKey();
     newState.updateHistoryKey();
+    newState.updateFirstPlayerKey();
     return newState;
   }
   // void updateKey() { key = generateKey(); }
   void updateHistoryKey() { history_key = generateHistoryKey(); }
+  void updateFirstPlayerKey() { player1_key = generateFirstPlayerKey(); }
   void printBoard() const { judge_board.print(); }
   Player getPlayerTurn() const { return player_turn; }
   // long long getKey() const { return key; }
   // vector<pair<int, Player>> getHistory() const { return history; }
   HistoryKey getHistoryKey() const { return history_key; }
+  PlayerKey getFirstPlayerKey() const { return player1_key; }
 
   vector<HistoryKey> getSymetricHistoriesKeys() const {
     vector<HistoryKey> res;
@@ -77,6 +81,20 @@ public:
             make_pair(permutation[history[i].first], history[i].second));
       }
       res.push_back(GameState::generateHistoryKey(transformed_history));
+    }
+    return res;
+  }
+
+  vector<PlayerKey> getSymetricPlayerHistoriesKeys() const {
+    vector<PlayerKey> res;
+
+    for (const auto &permutation : permutations) {
+      vector<pair<int, Player>> transformed_history;
+      for (int i = 0; i < history.size(); i++) {
+        transformed_history.push_back(
+            make_pair(permutation[history[i].first], history[i].second));
+      }
+      res.push_back(GameState::generateFirstPlayerKey(transformed_history));
     }
     return res;
   }
@@ -113,35 +131,45 @@ private:
   //   players_boards[PLAYER1].getKey(),
   //                      players_boards[PLAYER2].getKey(), player_turn);
   // }
+  static PlayerKey
+  generateFirstPlayerKey(const vector<pair<int, Player>> &history) {
+    PlayerKey ret = 0;
+    for (int i = 0; i < history.size(); i++) {
+      if (history[i].second == PLAYER1) {
+        continue;
+      }
+      ret += history[i].first;
+      ret *= 9;
+      ret += (i == history.size() - 1 || history[i + 1].second == PLAYER1);
+      ret *= 2;
+    }
+    return ret;
+  }
   static HistoryKey
   generateHistoryKey(const vector<pair<int, Player>> &history) {
-    HistoryKey ret({0, 0, 0});
-    for (int i = 0; i < 6 && i < history.size(); i++) {
-      ret.first_sixth += history[i].first;
-      ret.first_sixth *= 9;
-      ret.first_sixth += history[i].second;
-      ret.first_sixth *= 2;
+    HistoryKey ret({0, 0});
+    for (int i = 0; i < 9 && i < history.size(); i++) {
+      ret.first_ninth += history[i].first;
+      ret.first_ninth *= 9;
+      ret.first_ninth += history[i].second;
+      ret.first_ninth *= 2;
     }
-    for (int i = 6; i < 12 && i < history.size(); i++) {
-      ret.seventh_twelfth += history[i].first;
-      ret.seventh_twelfth *= 9;
-      ret.seventh_twelfth += history[i].second;
-      ret.seventh_twelfth *= 2;
-    }
-    for (int i = 12; i < 18 && i < history.size(); i++) {
-      ret.thirteen += history[i].first;
-      ret.thirteen *= 9;
-      ret.thirteen += history[i].second;
-      ret.thirteen *= 2;
+    for (int i = 9; i < history.size(); i++) {
+      ret.tenth_eighteen += history[i].first;
+      ret.tenth_eighteen *= 9;
+      ret.tenth_eighteen += history[i].second;
+      ret.tenth_eighteen *= 2;
     }
     return ret;
   }
   HistoryKey generateHistoryKey() { return generateHistoryKey(history); }
+  PlayerKey generateFirstPlayerKey() { return generateFirstPlayerKey(history); }
   Board judge_board;
   vector<Board> players_boards;
   Player player_turn;
   bool lose_move;
   HistoryKey history_key;
+  PlayerKey player1_key;
   // long long key;
   vector<pair<int, Player>> history;
 };
