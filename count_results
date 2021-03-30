@@ -4,8 +4,8 @@ was counting for 23 hours
 2seconds
 with symetry - 86413 states
 with history symetry 25hours - 3755821221 ~ 3.75*10^9 states
-with player1 history symetry 8550430 states
-with player2 history symetry 7216875 states
+with player1 history symetry >= 8550430 states (?)
+with player2 history symetry >= 7216875 states (?)
 
 Version 2 -- when there is a conflict you get to know and DO NOT lose a move
 was counting for 12 hours
@@ -13,5 +13,5 @@ was counting for 12 hours
 3 seconds
 with board symetry - 65287 states
 with history symetry 17hours - 2501481613 ~ 2.5*10^9 states
-with player1 history symetry 437735 states
-with player2 history symetry 424795 states
+with player1 history symetry >= 437735 states (?)
+with player2 history symetry >= 424795 states (?)
