@@ -24,9 +24,10 @@ class GameState {
 public:
   GameState(bool lose_move_)
       : judge_board(Board()), players_boards({Board(), Board()}),
-        player_turn(PLAYER1), lose_move(lose_move_) /*,  key(0) */,
-        history_key({0, 0}) {
+        player_turn(PLAYER1), lose_move(lose_move_) /*,  key(0) ,*/
+        /* history_key({0, 0}) */ {
     player1_key = 0;
+    player2_key = 0;
   }
   GameState(const Board &judge_board_, const Board &player1_board,
             const Board &player2_board, Player player_turn_, bool lose_move_)
@@ -34,8 +35,9 @@ public:
         players_boards({player1_board, player2_board}),
         player_turn(player_turn_), lose_move(lose_move_) {
     // key = generateKey();
-    history_key = generateHistoryKey();
+    // history_key = generateHistoryKey();
     player1_key = generateFirstPlayerKey();
+    player2_key = generateSecondPlayerKey();
   }
   vector<int> getPossibleMoves() const {
     return players_boards[player_turn].getFreeFields();
@@ -57,18 +59,20 @@ public:
     }
     newState.history.push_back(make_pair(field, player_turn));
     // newState.updateKey();
-    newState.updateHistoryKey();
+    // newState.updateHistoryKey();
     newState.updateFirstPlayerKey();
+    newState.updateSecondPlayerKey();
     return newState;
   }
   // void updateKey() { key = generateKey(); }
-  void updateHistoryKey() { history_key = generateHistoryKey(); }
+  // void updateHistoryKey() { history_key = generateHistoryKey(); }
   void updateFirstPlayerKey() { player1_key = generateFirstPlayerKey(); }
+  void updateSecondPlayerKey() { player2_key = generateFirstPlayerKey(); }
   void printBoard() const { judge_board.print(); }
   Player getPlayerTurn() const { return player_turn; }
   // long long getKey() const { return key; }
   // vector<pair<int, Player>> getHistory() const { return history; }
-  HistoryKey getHistoryKey() const { return history_key; }
+  // HistoryKey getHistoryKey() const { return history_key; }
   PlayerKey getFirstPlayerKey() const { return player1_key; }
 
   vector<HistoryKey> getSymetricHistoriesKeys() const {
@@ -97,6 +101,25 @@ public:
       res.push_back(GameState::generateFirstPlayerKey(transformed_history));
     }
     return res;
+  }
+
+  HistoryKey getRepresentativeHistoryPair() const {
+    
+    PlayerKey player1_max_key = 0;
+    PlayerKey player2_max_key = 0;
+
+    for (const auto &permutation : permutations) {
+      vector<pair<int, Player>> transformed_history;
+      for (int i = 0; i < history.size(); i++) {
+        transformed_history.push_back(
+            make_pair(permutation[history[i].first], history[i].second));
+      }
+      PlayerKey player1_key = GameState::generateFirstPlayerKey(transformed_history);
+      PlayerKey player2_key = GameState::generateSecondPlayerKey(transformed_history);
+      player1_max_key = max(player1_max_key, player1_key);
+      player2_max_key = max(player2_max_key, player2_key);
+    }
+    return {player1_max_key, player2_max_key};
   }
   // vector<long long> getSymetricJudgeStateKeys() const {
   //   vector<long long> judge_keys = judge_board.getSymetricBoardsKeys();
@@ -133,18 +156,29 @@ private:
   // }
   static PlayerKey
   generateFirstPlayerKey(const vector<pair<int, Player>> &history) {
+    return generatePlayerKey(history, PLAYER1);
+  }
+
+  static PlayerKey
+  generateSecondPlayerKey(const vector<pair<int, Player>> &history) {
+    return generatePlayerKey(history, PLAYER2);
+  }
+
+  static PlayerKey
+  generatePlayerKey(const vector<pair<int, Player>> &history, Player player) {
     PlayerKey ret = 0;
     for (int i = 0; i < history.size(); i++) {
-      if (history[i].second == PLAYER1) {
+      if (history[i].second == player) {
         continue;
       }
       ret += history[i].first;
       ret *= 9;
-      ret += (i == history.size() - 1 || history[i + 1].second == PLAYER1);
+      ret += (i == history.size() - 1 || history[i + 1].second == player);
       ret *= 2;
     }
     return ret;
   }
+
   static HistoryKey
   generateHistoryKey(const vector<pair<int, Player>> &history) {
     HistoryKey ret({0, 0});
@@ -164,12 +198,14 @@ private:
   }
   HistoryKey generateHistoryKey() { return generateHistoryKey(history); }
   PlayerKey generateFirstPlayerKey() { return generateFirstPlayerKey(history); }
+  PlayerKey generateSecondPlayerKey() { return generateSecondPlayerKey(history); }
   Board judge_board;
   vector<Board> players_boards;
   Player player_turn;
   bool lose_move;
-  HistoryKey history_key;
+  // HistoryKey history_key;
   PlayerKey player1_key;
+  PlayerKey player2_key;
   // long long key;
   vector<pair<int, Player>> history;
 };

@@ -63,16 +63,75 @@ public:
   //   }
   //   return counting_res;
   // }
-  CountingResultT countPlayerSymetricStatesInSubtree(const GameState &state) {
-    CountingResultT counting_res(1, 1);
-    for (const auto symetric_state : state.getSymetricPlayerHistoriesKeys()) {
-      if (player_states_in_subtree.find(symetric_state) !=
-          player_states_in_subtree.end()) {
+  // CountingResultT countPlayerSymetricStatesInSubtree(const GameState &state) {
+  //   CountingResultT counting_res(1, 1);
+  //   for (const auto symetric_state : state.getSymetricPlayerHistoriesKeys()) {
+  //     if (player_states_in_subtree.find(symetric_state) !=
+  //         player_states_in_subtree.end()) {
         // cout << "Found symetry between states: " << endl;
         // state.printBoard();
-        return {player_states_in_subtree.at(symetric_state), 0};
-      }
-    }
+  //       return {player_states_in_subtree.at(symetric_state), 0};
+  //     }
+  //   }
+  //   Result res = state.getResult();
+  //   if (res == INVALID) {
+  //     state.printBoard();
+  //     cerr << "BOARD IS INVALID" << endl;
+  //     exit(0);
+  //   }
+  //   if (res != ONGOING) {
+  //     return counting_res;
+  //   } else {
+  //     for (int move : state.getPossibleMoves()) {
+  //       CountingResultT subres =
+  //           countPlayerSymetricStatesInSubtree(state.performMove(move));
+  //       counting_res.full_count += subres.full_count;
+  //       counting_res.non_izometric_count += subres.non_izometric_count;
+  //       progress_bar.full_count += subres.full_count;
+  //       progress_bar.non_izometric_count += subres.non_izometric_count;
+  //     }
+  //     player_states_in_subtree[state.getFirstPlayerKey()] =
+  //         counting_res.full_count;
+  //     for (int move : state.getPossibleMoves()) {
+  //       auto subres_history_key = state.performMove(move).getFirstPlayerKey();
+  //       player_states_in_subtree.erase(subres_history_key);
+  //     }
+  //     if (progress_bar.full_count > 2 * last_printed.full_count) {
+  //       last_printed = progress_bar;
+  //       auto end = std::chrono::high_resolution_clock::now();
+  //       std::chrono::duration<double> elapsed = end - start;
+  //       cout << "Elapsed time: " << elapsed.count() << " s\n";
+  //       cout << "Full count: " << progress_bar.full_count
+  //            << " Izometric: " << progress_bar.non_izometric_count << endl;
+  //     }
+
+  //     progress_bar.full_count -= counting_res.full_count;
+  //     progress_bar.non_izometric_count -= counting_res.non_izometric_count;
+  //   }
+  //   return counting_res;
+  // }
+
+  // long long countStatesInSubtree(const GameState &state) {
+  //   Result res = state.getResult();
+  //   if (res == INVALID) {
+  //     state.printBoard();
+  //     cerr << "BOARD IS INVALID" << endl;
+  //     exit(0);
+  //   }
+
+  //   long long count = 1;
+  //   if (res != ONGOING) {
+  //     return count;
+  //   } else {
+  //     vector<int> possibleMoves = state.getPossibleMoves();
+  //     for (int move : possibleMoves) {
+  //       count += countStatesInSubtree(state.performMove(move));
+  //     }
+  //     return count;
+  //   }
+  // }
+  
+  void countMatrixSize(const GameState &state, long long izometry_coef) {
     Result res = state.getResult();
     if (res == INVALID) {
       state.printBoard();
@@ -80,22 +139,33 @@ public:
       exit(0);
     }
     if (res != ONGOING) {
-      return counting_res;
+      long long win_coef = res == PLAYER1WIN ? PROBABILITY_FACTOR : (res == PLAYER2WIN ? -PROBABILITY_FACTOR : 0);
+      matrix[state.getRepresentativeHistoryPair()] += win_coef / izometry_coef;
+      if (matrix[state.getRepresentativeHistoryPair()] == 0) {
+        matrix.erase(state.getRepresentativeHistoryPair());
+      }
+      return;
     } else {
-      for (int move : state.getPossibleMoves()) {
-        CountingResultT subres =
-            countPlayerSymetricStatesInSubtree(state.performMove(move));
-        counting_res.full_count += subres.full_count;
-        counting_res.non_izometric_count += subres.non_izometric_count;
-        progress_bar.full_count += subres.full_count;
-        progress_bar.non_izometric_count += subres.non_izometric_count;
+      vector<int> moves = state.getPossibleMoves();
+      map<HistoryKey, vector<int>> izometries;
+      map<int, long long> izometry_coefs;
+      vector <pair<GameState, int>> newStates; 
+      for (int move : moves) {
+          newStates.push_back({state.performMove(move), move});
       }
-      player_states_in_subtree[state.getFirstPlayerKey()] =
-          counting_res.full_count;
-      for (int move : state.getPossibleMoves()) {
-        auto subres_history_key = state.performMove(move).getFirstPlayerKey();
-        player_states_in_subtree.erase(subres_history_key);
+      for (auto& state: newStates) {
+        izometries[state.first.getRepresentativeHistoryPair()].push_back(state.second);
       }
+      for (auto e : izometries) {
+        for (auto move : e.second) {
+          izometry_coefs[move] = e.second.size();
+          // cout << move << " " << izometry_coefs[move] << endl;
+        }
+      }
+      for (int move : moves) {
+          countMatrixSize(state.performMove(move), izometry_coef * izometry_coefs[move]);
+      }
+      progress_bar.full_count = matrix.size();
       if (progress_bar.full_count > 2 * last_printed.full_count) {
         last_printed = progress_bar;
         auto end = std::chrono::high_resolution_clock::now();
@@ -104,36 +174,22 @@ public:
         cout << "Full count: " << progress_bar.full_count
              << " Izometric: " << progress_bar.non_izometric_count << endl;
       }
-
-      progress_bar.full_count -= counting_res.full_count;
-      progress_bar.non_izometric_count -= counting_res.non_izometric_count;
-    }
-    return counting_res;
-  }
-
-  long long countStatesInSubtree(const GameState &state) {
-    Result res = state.getResult();
-    if (res == INVALID) {
-      state.printBoard();
-      cerr << "BOARD IS INVALID" << endl;
-      exit(0);
-    }
-
-    long long count = 1;
-    if (res != ONGOING) {
-      return count;
-    } else {
-      vector<int> possibleMoves = state.getPossibleMoves();
-      for (int move : possibleMoves) {
-        count += countStatesInSubtree(state.performMove(move));
-      }
-      return count;
     }
   }
-
+  void printSolution() {
+    cout << "Matrix size: " << matrix.size() << endl;
+    unordered_map<long long, long long> unique_results;
+    for (auto p : matrix) {
+      unique_results[p.second]++;
+    }
+    for (auto e : unique_results) {
+      cout << "Element: " << e.first << ", count: " << e.second << endl;
+    }
+  }
 private:
   // map<HistoryKey, long long> states_in_subtree;
-  map<PlayerKey, long long> player_states_in_subtree;
+  // map<PlayerKey, long long> player_states_in_subtree;
+  map<HistoryKey, long long> matrix;
   CountingResultT progress_bar;
   CountingResultT last_printed;
   std::chrono::_V2::system_clock::time_point start;
@@ -255,19 +311,21 @@ public:
 void test_do_not_lose_move() {
   DoNotLoseMoveWhenConflictGameState initialGameState;
   Counter counter;
-  auto res = counter.countPlayerSymetricStatesInSubtree(initialGameState);
-  cout << "Test do not lose move: " << endl;
-  cout << "Full count: " << res.full_count << endl;
-  cout << "Non izometric states: " << res.non_izometric_count << endl;
+  counter.countMatrixSize(initialGameState, 1LL);
+  counter.printSolution();
+  // cout << "Test do not lose move: " << endl;
+  // cout << "Full count: " << res.full_count << endl;
+  // cout << "Non izometric states: " << res.non_izometric_count << endl;
 }
 
 void test_lose_move() {
   LoseMoveWhenConflictGameState initialGameState;
   Counter counter;
-  auto res = counter.countPlayerSymetricStatesInSubtree(initialGameState);
-  cout << "Test lose move: " << endl;
-  cout << "Full count: " << res.full_count << endl;
-  cout << "Non izometric states: " << res.non_izometric_count << endl;
+  counter.countMatrixSize(initialGameState, 1LL);
+  counter.printSolution();
+  // cout << "Test lose move: " << endl;
+  // cout << "Full count: " << res.full_count << endl;
+  // cout << "Non izometric states: " << res.non_izometric_count << endl;
 }
 
 int main() {
