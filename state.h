@@ -17,6 +17,8 @@ bool operator<(const HistoryKey &lhs, const HistoryKey &rhs) {
   if (lhs.first_ninth < rhs.first_ninth) {
     return true;
   }
+  else if (lhs.first_ninth > rhs.first_ninth)
+    return false;
   return lhs.tenth_eighteen < rhs.tenth_eighteen;
 }
 
@@ -67,7 +69,7 @@ public:
   // void updateKey() { key = generateKey(); }
   // void updateHistoryKey() { history_key = generateHistoryKey(); }
   void updateFirstPlayerKey() { player1_key = generateFirstPlayerKey(); }
-  void updateSecondPlayerKey() { player2_key = generateFirstPlayerKey(); }
+  void updateSecondPlayerKey() { player2_key = generateSecondPlayerKey(); }
   void printBoard() const { judge_board.print(); }
   Player getPlayerTurn() const { return player_turn; }
   // long long getKey() const { return key; }

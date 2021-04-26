@@ -29,9 +29,9 @@ public:
     }
     if (playersWinningSets[PLAYER1] > 0 && playersWinningSets[PLAYER2] > 0) {
       return INVALID;
-    } else if (playersWinningSets[PLAYER1] == 1) {
+    } else if (playersWinningSets[PLAYER1] > 0) {
       return PLAYER1WIN;
-    } else if (playersWinningSets[PLAYER2] == 1) {
+    } else if (playersWinningSets[PLAYER2] > 0) {
       return PLAYER2WIN;
     } else {
       int fields_taken = 0;
