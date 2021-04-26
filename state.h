@@ -6,9 +6,29 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+template <class T> inline void hash_combine(std::size_t &s, const T &v) {
+  std::hash<T> h;
+  s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
+}
+
 struct HistoryKey {
   long long first_ninth;
   long long tenth_eighteen;
+  bool operator==(const HistoryKey &other) const {
+    return this->first_ninth == other.first_ninth &&
+           this->tenth_eighteen == other.tenth_eighteen;
+  }
+};
+
+template <class T> class GenericStructHash;
+
+template <> struct GenericStructHash<HistoryKey> {
+  std::size_t operator()(HistoryKey const &key) const {
+    std::size_t res = 0;
+    hash_combine(res, key.first_ninth);
+    hash_combine(res, key.tenth_eighteen);
+    return res;
+  }
 };
 
 typedef long long PlayerKey;
@@ -16,9 +36,9 @@ typedef long long PlayerKey;
 bool operator<(const HistoryKey &lhs, const HistoryKey &rhs) {
   if (lhs.first_ninth < rhs.first_ninth) {
     return true;
-  }
-  else if (lhs.first_ninth > rhs.first_ninth)
+  } else if (lhs.first_ninth > rhs.first_ninth) {
     return false;
+  }
   return lhs.tenth_eighteen < rhs.tenth_eighteen;
 }
 
@@ -27,7 +47,7 @@ public:
   GameState(bool lose_move_)
       : judge_board(Board()), players_boards({Board(), Board()}),
         player_turn(PLAYER1), lose_move(lose_move_) /*,  key(0) ,*/
-        /* history_key({0, 0}) */ {
+  /* history_key({0, 0}) */ {
     player1_key = 0;
     player2_key = 0;
   }
@@ -106,7 +126,7 @@ public:
   }
 
   HistoryKey getRepresentativeHistoryPair() const {
-    
+
     PlayerKey player1_max_key = 0;
     PlayerKey player2_max_key = 0;
 
@@ -116,8 +136,10 @@ public:
         transformed_history.push_back(
             make_pair(permutation[history[i].first], history[i].second));
       }
-      PlayerKey player1_key = GameState::generateFirstPlayerKey(transformed_history);
-      PlayerKey player2_key = GameState::generateSecondPlayerKey(transformed_history);
+      PlayerKey player1_key =
+          GameState::generateFirstPlayerKey(transformed_history);
+      PlayerKey player2_key =
+          GameState::generateSecondPlayerKey(transformed_history);
       player1_max_key = max(player1_max_key, player1_key);
       player2_max_key = max(player2_max_key, player2_key);
     }
@@ -166,8 +188,8 @@ private:
     return generatePlayerKey(history, PLAYER2);
   }
 
-  static PlayerKey
-  generatePlayerKey(const vector<pair<int, Player>> &history, Player player) {
+  static PlayerKey generatePlayerKey(const vector<pair<int, Player>> &history,
+                                     Player player) {
     PlayerKey ret = 0;
     for (int i = 0; i < history.size(); i++) {
       if (history[i].second == player) {
@@ -200,7 +222,9 @@ private:
   }
   HistoryKey generateHistoryKey() { return generateHistoryKey(history); }
   PlayerKey generateFirstPlayerKey() { return generateFirstPlayerKey(history); }
-  PlayerKey generateSecondPlayerKey() { return generateSecondPlayerKey(history); }
+  PlayerKey generateSecondPlayerKey() {
+    return generateSecondPlayerKey(history);
+  }
   Board judge_board;
   vector<Board> players_boards;
   Player player_turn;

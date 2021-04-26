@@ -63,13 +63,15 @@ public:
   //   }
   //   return counting_res;
   // }
-  // CountingResultT countPlayerSymetricStatesInSubtree(const GameState &state) {
+  // CountingResultT countPlayerSymetricStatesInSubtree(const GameState &state)
+  // {
   //   CountingResultT counting_res(1, 1);
-  //   for (const auto symetric_state : state.getSymetricPlayerHistoriesKeys()) {
+  //   for (const auto symetric_state : state.getSymetricPlayerHistoriesKeys())
+  //   {
   //     if (player_states_in_subtree.find(symetric_state) !=
   //         player_states_in_subtree.end()) {
-        // cout << "Found symetry between states: " << endl;
-        // state.printBoard();
+  // cout << "Found symetry between states: " << endl;
+  // state.printBoard();
   //       return {player_states_in_subtree.at(symetric_state), 0};
   //     }
   //   }
@@ -93,7 +95,8 @@ public:
   //     player_states_in_subtree[state.getFirstPlayerKey()] =
   //         counting_res.full_count;
   //     for (int move : state.getPossibleMoves()) {
-  //       auto subres_history_key = state.performMove(move).getFirstPlayerKey();
+  //       auto subres_history_key =
+  //       state.performMove(move).getFirstPlayerKey();
   //       player_states_in_subtree.erase(subres_history_key);
   //     }
   //     if (progress_bar.full_count > 2 * last_printed.full_count) {
@@ -130,7 +133,7 @@ public:
   //     return count;
   //   }
   // }
-  
+
   void countMatrixSize(const GameState &state, long long izometry_coef) {
     Result res = state.getResult();
     if (res == INVALID) {
@@ -139,7 +142,9 @@ public:
       exit(0);
     }
     if (res != ONGOING) {
-      long long win_coef = res == PLAYER1WIN ? PROBABILITY_FACTOR : (res == PLAYER2WIN ? -PROBABILITY_FACTOR : 0);
+      long long win_coef = res == PLAYER1WIN
+                               ? PROBABILITY_FACTOR
+                               : (res == PLAYER2WIN ? -PROBABILITY_FACTOR : 0);
       matrix[state.getRepresentativeHistoryPair()] += win_coef / izometry_coef;
       if (matrix[state.getRepresentativeHistoryPair()] == 0) {
         matrix.erase(state.getRepresentativeHistoryPair());
@@ -149,12 +154,13 @@ public:
       vector<int> moves = state.getPossibleMoves();
       map<HistoryKey, vector<int>> izometries;
       map<int, long long> izometry_coefs;
-      vector <pair<GameState, int>> newStates; 
+      vector<pair<GameState, int>> newStates;
       for (int move : moves) {
-          newStates.push_back({state.performMove(move), move});
+        newStates.push_back({state.performMove(move), move});
       }
-      for (auto& state: newStates) {
-        izometries[state.first.getRepresentativeHistoryPair()].push_back(state.second);
+      for (auto &state : newStates) {
+        izometries[state.first.getRepresentativeHistoryPair()].push_back(
+            state.second);
       }
       for (auto e : izometries) {
         for (auto move : e.second) {
@@ -163,7 +169,8 @@ public:
         }
       }
       for (int move : moves) {
-          countMatrixSize(state.performMove(move), izometry_coef * izometry_coefs[move]);
+        countMatrixSize(state.performMove(move),
+                        izometry_coef * izometry_coefs[move]);
       }
       progress_bar.full_count = matrix.size();
       if (progress_bar.full_count > 2 * last_printed.full_count) {
@@ -186,10 +193,11 @@ public:
       cout << "Element: " << e.first << ", count: " << e.second << endl;
     }
   }
+
 private:
   // map<HistoryKey, long long> states_in_subtree;
   // map<PlayerKey, long long> player_states_in_subtree;
-  map<HistoryKey, long long> matrix;
+  unordered_map<HistoryKey, long long, GenericStructHash<HistoryKey>> matrix;
   CountingResultT progress_bar;
   CountingResultT last_printed;
   std::chrono::_V2::system_clock::time_point start;
