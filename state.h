@@ -125,9 +125,9 @@ public:
     return res;
   }
 
-  vector<PlayerKey> calculateRepresentativeHistoryPair() const {
+  array<PlayerKey, 2> calculateRepresentativeHistoryPair() const {
 
-    vector<PlayerKey> player_max_keys({0, 0});
+    array<PlayerKey, 2> player_max_keys({0, 0});
 
     for (const auto &permutation : permutations) {
       vector<pair<int, Player>> transformed_history;

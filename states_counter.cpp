@@ -148,7 +148,8 @@ public:
                                ? PROBABILITY_FACTOR
                                : (res == PLAYER2WIN ? -PROBABILITY_FACTOR : 0);
 
-      vector<PlayerKey> history_id = state.calculateRepresentativeHistoryPair();
+      array<PlayerKey, 2> history_id =
+          state.calculateRepresentativeHistoryPair();
       matrix[history_id] +=
           win_coef / (players_izometry_coefs[0] * players_izometry_coefs[1]);
       if (matrix[history_id] == 0) {
@@ -166,7 +167,7 @@ public:
         new_states_with_moves.push_back({state.performMove(move), move});
       }
       for (auto &new_state_and_move : new_states_with_moves) {
-        vector<PlayerKey> history_id =
+        array<PlayerKey, 2> history_id =
             new_state_and_move.first.calculateRepresentativeHistoryPair();
         izometries[history_id[player_turn]].push_back(
             new_state_and_move.second);
@@ -213,7 +214,7 @@ public:
 private:
   // map<HistoryKey, long long> states_in_subtree;
   // map<PlayerKey, long long> player_states_in_subtree;
-  map<vector<PlayerKey>, long long> matrix;
+  map<array<PlayerKey, 2>, long long> matrix;
   CountingResultT progress_bar;
   CountingResultT last_printed;
   std::chrono::_V2::system_clock::time_point start;
