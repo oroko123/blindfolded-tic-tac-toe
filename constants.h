@@ -7,6 +7,17 @@ using namespace std;
 enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
 enum Player { PLAYER1, PLAYER2, NONE }; // WARNING!!! DO NOT CHANGE THE ORDER
 
+char playerToSign(Player player) {
+  switch (player) {
+  case PLAYER1:
+    return 'X';
+  case PLAYER2:
+    return 'O';
+  default:
+    return ' ';
+  }
+}
+
 const int SIMULATIONS_NUM = 10000;
 const int FIELDS_NUM = 9;
 const long long THREE_TO_POWER_NINE = 19683;

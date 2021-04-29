@@ -55,9 +55,11 @@ public:
     return ret;
   }
   void print() const {
-    cout << fields[0] << " " << fields[1] << " " << fields[2] << endl;
-    cout << fields[3] << " " << fields[4] << " " << fields[5] << endl;
-    cout << fields[6] << " " << fields[7] << " " << fields[8] << endl;
+    for (int i = 0; i < 3; i++) {
+      cout << playerToSign(fields[3 * i]) << " | "
+           << playerToSign(fields[3 * i + 1]) << " | "
+           << playerToSign(fields[3 * i + 2]) << endl;
+    }
     cout << endl;
   }
   // vector<long long> getSymetricBoardsKeys() const {
