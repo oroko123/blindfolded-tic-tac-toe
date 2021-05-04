@@ -183,11 +183,11 @@ private:
       if (history[i].second != player) {
         continue;
       }
-      ret += history[i].first; // field
       ret *= 9;
+      ret += history[i].first; // field
+      ret *= 2;
       ret += (i == history.size() - 1 ||
               history[i + 1].second != player); // move performed
-      ret *= 2;
     }
     return ret;
   }
