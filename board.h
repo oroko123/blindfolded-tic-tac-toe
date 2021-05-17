@@ -62,25 +62,8 @@ public:
     }
     cout << endl;
   }
-  // vector<long long> getSymetricBoardsKeys() const {
-  //   vector<long long> ret;
-  //   for (const auto &permutation : permutations) {
-  //     ret.push_back(getKey(permute(fields, permutation)));
-  //   }
-  //   return ret;
-  // }
-  // long long getKey() { return getKey(fields); }
 
 private:
-  // static long long getKey(const vector<Player> &fields) {
-  //   long long ret = 0;
-  //   for (int i = 0; i < fields.size(); i++) {
-  //     ret += fields[i];
-  //     ret *= 3;
-  //   }
-  //   return ret;
-  // }
-
   vector<Player> fields;
   static const vector<vector<int>> winning_sets;
 };

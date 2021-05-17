@@ -21,18 +21,18 @@ char playerToSign(Player player) {
 const int SIMULATIONS_NUM = 10000;
 const int FIELDS_NUM = 9;
 const long long THREE_TO_POWER_NINE = 19683;
-const long long PROBABILITY_FACTOR = 1024 * 81; // 2^10 * 3^4
+const long long PROBABILITY_FACTOR = 64; // 2^6
 
-const vector<vector<int>> permutations = {
-    {0, 1, 2, 3, 4, 5, 6, 7, 8}, // id
-    {6, 7, 8, 3, 4, 5, 0, 1, 2}, // OX
-    {2, 1, 0, 5, 4, 3, 8, 7, 6}, // OY
-    {0, 3, 6, 1, 4, 7, 2, 5, 8}, // diagonal
-    {8, 5, 2, 7, 4, 1, 6, 3, 0}, // second diagonal
-    {2, 5, 8, 1, 4, 7, 0, 3, 6}, // 90*
-    {8, 7, 6, 5, 4, 3, 2, 1, 0}, // 180*
-    {6, 3, 0, 7, 4, 1, 8, 5, 2}  // 270*
-};
+const vector<int> id = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+const vector<int> ox = {6, 7, 8, 3, 4, 5, 0, 1, 2};
+const vector<int> oy = {2, 1, 0, 5, 4, 3, 8, 7, 6};
+const vector<int> diag = {0, 3, 6, 1, 4, 7, 2, 5, 8};
+const vector<int> sec_diag = {8, 5, 2, 7, 4, 1, 6, 3, 0};
+const vector<int> deg_90 = {2, 5, 8, 1, 4, 7, 0, 3, 6};
+const vector<int> deg_180 = {8, 7, 6, 5, 4, 3, 2, 1, 0};
+const vector<int> deg_270 = {6, 3, 0, 7, 4, 1, 8, 5, 2};
+const vector<vector<int>> permutations = {id,       ox,     oy,      diag,
+                                          sec_diag, deg_90, deg_180, deg_270};
 
 constexpr Player getOppositePlayer(Player player) {
   if (player == PLAYER1) {
