@@ -3,33 +3,35 @@
 #include <gtest/gtest.h>
 
 TEST(GeneratePlayerKeyTest, TestCalculation) {
-  PlayerKey player1_key = GameState::generatePlayerKey({{3, PLAYER1, true},
-                                                        {4, PLAYER2, true},
-                                                        {1, PLAYER1, true},
-                                                        {1, PLAYER2, false},
-                                                        {6, PLAYER1, true}},
-                                                       PLAYER1);
-  PlayerKey player2_key = GameState::generatePlayerKey({{3, PLAYER1, true},
-                                                        {4, PLAYER2, true},
-                                                        {1, PLAYER1, true},
-                                                        {1, PLAYER2, false},
-                                                        {6, PLAYER1, true}},
-                                                       PLAYER2);
-  ASSERT_EQ(player1_key, 18 * 18 * 18 + 18 * 18 * (3 * 2 + 1) + 18 * (1 * 2 + 1) + 6 * 2 + 1);
+  PlayerKey player1_key =
+      GameState::generatePlayerStateKey({{3, PLAYER1, true},
+                                         {4, PLAYER2, true},
+                                         {1, PLAYER1, true},
+                                         {1, PLAYER2, false},
+                                         {6, PLAYER1, true}},
+                                        PLAYER1);
+  PlayerKey player2_key =
+      GameState::generatePlayerStateKey({{3, PLAYER1, true},
+                                         {4, PLAYER2, true},
+                                         {1, PLAYER1, true},
+                                         {1, PLAYER2, false},
+                                         {6, PLAYER1, true}},
+                                        PLAYER2);
+  ASSERT_EQ(player1_key, 18 * 18 * 18 + 18 * 18 * (3 * 2 + 1) +
+                             18 * (1 * 2 + 1) + 6 * 2 + 1);
   ASSERT_EQ(player2_key, 18 * 18 + 18 * (4 * 2 + 1) + (1 * 2 + 0));
 }
 
 TEST(GeneratePlayerKeyTest, TestLeadingZero) {
-  PlayerKey player2_key_1 = GameState::generatePlayerKey({{0, PLAYER1, true},
-                                                        {0, PLAYER2, false},
-                                                        {1, PLAYER1, true},
-                                                        {1, PLAYER2, false},
-                                                        {6, PLAYER1, true}},
-                                                       PLAYER2);
-  PlayerKey player2_key_2 = GameState::generatePlayerKey({{1, PLAYER1, true},
-                                                        {1, PLAYER2, false},
-                                                        {6, PLAYER1, true}},
-                                                       PLAYER2);
+  PlayerKey player2_key_1 =
+      GameState::generatePlayerStateKey({{0, PLAYER1, true},
+                                         {0, PLAYER2, false},
+                                         {1, PLAYER1, true},
+                                         {1, PLAYER2, false},
+                                         {6, PLAYER1, true}},
+                                        PLAYER2);
+  PlayerKey player2_key_2 = GameState::generatePlayerStateKey(
+      {{1, PLAYER1, true}, {1, PLAYER2, false}, {6, PLAYER1, true}}, PLAYER2);
   ASSERT_EQ(player2_key_1, 18 * 18 + (1 * 2 + 0));
   ASSERT_EQ(player2_key_2, 18 + (1 * 2 + 0));
 }

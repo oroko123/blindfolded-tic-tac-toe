@@ -59,7 +59,8 @@ public:
                                        get<1>(history[i]), get<2>(history[i])});
       }
       for (auto player : {PLAYER1, PLAYER2}) {
-        PlayerKey player_key = generatePlayerKey(transformed_history, player);
+        PlayerKey player_key =
+            generatePlayerActionStateKey(transformed_history, player);
         player_max_keys[player] = max(player_max_keys[player], player_key);
       }
     }
@@ -67,8 +68,14 @@ public:
   }
 
   static PlayerKey
-  generatePlayerKey(const vector<tuple<int, Player, bool>> &history,
-                    Player player) {
+  generatePlayerActionStateKey(const vector<tuple<int, Player, bool>> &history,
+                               Player player) {
+    return generatePlayerStateKey(history, player) / 2;
+  }
+
+  static PlayerKey
+  generatePlayerStateKey(const vector<tuple<int, Player, bool>> &history,
+                         Player player) {
     PlayerKey ret = 1;
     for (int i = 0; i < history.size(); i++) {
       if (get<1>(history[i]) != player) {
@@ -83,8 +90,11 @@ public:
   }
 
 private:
-  PlayerKey generatePlayerKey(Player player) {
-    return generatePlayerKey(history, player);
+  PlayerKey generatePlayerActionStateKey(Player player) {
+    return generatePlayerActionStateKey(history, player);
+  }
+  PlayerKey generatePlayerStateKey(Player player) {
+    return generatePlayerStateKey(history, player);
   }
   Board judge_board;
   vector<Board> players_boards;
