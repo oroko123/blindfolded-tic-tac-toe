@@ -69,7 +69,7 @@ public:
   static PlayerKey
   generatePlayerKey(const vector<tuple<int, Player, bool>> &history,
                     Player player) {
-    PlayerKey ret = 0;
+    PlayerKey ret = 1;
     for (int i = 0; i < history.size(); i++) {
       if (get<1>(history[i]) != player) {
         continue;
