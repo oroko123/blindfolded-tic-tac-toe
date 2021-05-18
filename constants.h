@@ -7,6 +7,17 @@ using namespace std;
 enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
 enum Player { PLAYER1, PLAYER2, NONE }; // WARNING!!! DO NOT CHANGE THE ORDER
 
+struct HistoryKey {
+  long long first_ninth;
+  long long tenth_eighteen;
+  bool operator==(const HistoryKey &other) const {
+    return this->first_ninth == other.first_ninth &&
+           this->tenth_eighteen == other.tenth_eighteen;
+  }
+};
+
+typedef long long PlayerKey;
+
 char playerToSign(Player player) {
   switch (player) {
   case PLAYER1:
@@ -22,10 +33,6 @@ const int SIMULATIONS_NUM = 10000;
 const int FIELDS_NUM = 9;
 const long long THREE_TO_POWER_NINE = 19683;
 const long long PROBABILITY_FACTOR = 64; // 2^6
-const string LOSE_MOVE_PLAYER2_FILENAME = "LOSE_MOVE_MATRICES_PLAYER2";
-const string DO_NOT_LOSE_MOVE_PLAYER2_FILENAME = "DO_NOT_LOSE_MOVE_MATRICES_PLAYER2";
-// const string LOSE_MOVE_PLAYER1_FILENAME = "LOSE_MOVE_MATRICES_PLAYER1";
-// const string DO_NOT_LOSE_MOVE_PLAYER1_FILENAME = "DO_NOT_LOSE_MOVE_MATRICES_PLAYER1";
 
 const vector<int> id = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 const vector<int> ox = {6, 7, 8, 3, 4, 5, 0, 1, 2};

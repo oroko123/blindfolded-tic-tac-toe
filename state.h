@@ -6,17 +6,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct HistoryKey {
-  long long first_ninth;
-  long long tenth_eighteen;
-  bool operator==(const HistoryKey &other) const {
-    return this->first_ninth == other.first_ninth &&
-           this->tenth_eighteen == other.tenth_eighteen;
-  }
-};
-
-typedef long long PlayerKey;
-
 class GameState {
 public:
   GameState(bool lose_move_)

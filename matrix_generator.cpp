@@ -1,6 +1,7 @@
 #include "board.h"
 #include "constants.h"
 #include "state.h"
+#include "serializer.h"
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -115,6 +116,9 @@ public:
       cout << "Element: " << e.first << ", count: " << e.second << endl;
     }
   }
+  map<array<PlayerKey, 2>, int> getP() {return matrix_p;}
+  map<array<PlayerKey, 2>, int> getC() {return player_matrix[PLAYER2];}
+  map<array<PlayerKey, 2>, int> getD() {return player_matrix[PLAYER1];}
 private:
   map<array<PlayerKey, 2>, int>
       matrix_p; // <player1_action_key, player2_action_key>
@@ -130,6 +134,9 @@ void test_do_not_lose_move() {
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
   counter.printSolution();
+  Serializer::write_to_file("do_not_lose_P", counter.getP(), false);
+  Serializer::write_to_file("do_not_lose_C", counter.getC(), false);
+  Serializer::write_to_file("do_not_lose_D", counter.getD(), false);
 }
 
 void test_lose_move() {
@@ -137,6 +144,9 @@ void test_lose_move() {
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
   counter.printSolution();
+  Serializer::write_to_file("do_not_lose_P", counter.getP(), false);
+  Serializer::write_to_file("do_not_lose_C", counter.getC(), false);
+  Serializer::write_to_file("do_not_lose_D", counter.getD(), false);
 }
 
 int main() {
