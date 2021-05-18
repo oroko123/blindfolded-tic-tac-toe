@@ -48,36 +48,35 @@ public:
   void printBoard() const { judge_board.print(); }
   Player getPlayerTurn() const { return player_turn; }
 
-  array<PlayerKey, 2> calculateRepresentativeHistoryPair() const {
+  array<PlayerKey, 2> calculateRepresentativeStateKeyPair() const {
 
     array<PlayerKey, 2> player_max_keys({0, 0});
 
     for (const auto &permutation : permutations) {
       vector<tuple<int, Player, bool>> transformed_history;
-      for (int i = 0; i < history.size(); i++) {
+      for (size_t i = 0; i < history.size(); ++i) {
         transformed_history.push_back({permutation[get<0>(history[i])],
                                        get<1>(history[i]), get<2>(history[i])});
       }
       for (auto player : {PLAYER1, PLAYER2}) {
         PlayerKey player_key =
-            generatePlayerActionStateKey(transformed_history, player);
+            generatePlayerStateKey(transformed_history, player);
         player_max_keys[player] = max(player_max_keys[player], player_key);
       }
     }
     return player_max_keys;
   }
 
-  static PlayerKey
-  generatePlayerActionStateKey(const vector<tuple<int, Player, bool>> &history,
-                               Player player) {
-    return generatePlayerStateKey(history, player) / 2;
+  array<PlayerKey, 2> calculateRepresentativeActionStateKeyPair() const {
+    array<PlayerKey, 2> res = calculateRepresentativeStateKeyPair();
+    return {res[0] / 2, res[1] / 2};
   }
 
   static PlayerKey
   generatePlayerStateKey(const vector<tuple<int, Player, bool>> &history,
                          Player player) {
     PlayerKey ret = 1;
-    for (int i = 0; i < history.size(); i++) {
+    for (size_t i = 0; i < history.size(); ++i) {
       if (get<1>(history[i]) != player) {
         continue;
       }
@@ -90,10 +89,7 @@ public:
   }
 
 private:
-  PlayerKey generatePlayerActionStateKey(Player player) {
-    return generatePlayerActionStateKey(history, player);
-  }
-  PlayerKey generatePlayerStateKey(Player player) {
+  PlayerKey generatePlayerStateKey(Player player) const {
     return generatePlayerStateKey(history, player);
   }
   Board judge_board;

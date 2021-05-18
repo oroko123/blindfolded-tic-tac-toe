@@ -47,7 +47,7 @@ public:
   void setField(int field, Player player) { fields[field] = player; }
   vector<int> getFreeFields() const {
     vector<int> ret;
-    for (int i = 0; i < fields.size(); i++) {
+    for (size_t i = 0; i < fields.size(); ++i) {
       if (fields[i] == NONE) {
         ret.push_back(i);
       }

@@ -22,6 +22,10 @@ const int SIMULATIONS_NUM = 10000;
 const int FIELDS_NUM = 9;
 const long long THREE_TO_POWER_NINE = 19683;
 const long long PROBABILITY_FACTOR = 64; // 2^6
+const string LOSE_MOVE_PLAYER2_FILENAME = "LOSE_MOVE_MATRICES_PLAYER2";
+const string DO_NOT_LOSE_MOVE_PLAYER2_FILENAME = "DO_NOT_LOSE_MOVE_MATRICES_PLAYER2";
+// const string LOSE_MOVE_PLAYER1_FILENAME = "LOSE_MOVE_MATRICES_PLAYER1";
+// const string DO_NOT_LOSE_MOVE_PLAYER1_FILENAME = "DO_NOT_LOSE_MOVE_MATRICES_PLAYER1";
 
 const vector<int> id = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 const vector<int> ox = {6, 7, 8, 3, 4, 5, 0, 1, 2};
@@ -46,7 +50,7 @@ constexpr Player getOppositePlayer(Player player) {
 
 vector<Player> permute(const vector<Player> &a, const vector<int> &pi) {
   vector<Player> res;
-  for (int i = 0; i < a.size(); i++) {
+  for (size_t i = 0; i < a.size(); ++i) {
     res.push_back(a[pi[i]]);
   }
   return res;

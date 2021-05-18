@@ -42,8 +42,8 @@ TEST(HistoryGeneration, TestTheSame) {
       state.performMove(0).performMove(1).performMove(4).performMove(7);
   auto state2 =
       state.performMove(6).performMove(3).performMove(4).performMove(5);
-  ASSERT_EQ(state1.calculateRepresentativeHistoryPair(),
-            state2.calculateRepresentativeHistoryPair());
+  ASSERT_EQ(state1.calculateRepresentativeActionStateKeyPair(),
+            state2.calculateRepresentativeActionStateKeyPair());
 }
 
 TEST(HistoryGeneration, TestDifferent) {
@@ -52,8 +52,8 @@ TEST(HistoryGeneration, TestDifferent) {
       state.performMove(0).performMove(1).performMove(4).performMove(7);
   auto state2 =
       state.performMove(0).performMove(1).performMove(4).performMove(5);
-  ASSERT_NE(state1.calculateRepresentativeHistoryPair(),
-            state2.calculateRepresentativeHistoryPair());
+  ASSERT_NE(state1.calculateRepresentativeActionStateKeyPair(),
+            state2.calculateRepresentativeActionStateKeyPair());
 }
 
 int main(int argc, char **argv) {
