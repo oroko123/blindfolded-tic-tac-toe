@@ -6,32 +6,39 @@
 
 using namespace std;
 
-typedef struct CountingResult {
+typedef struct CountingResult
+{
   CountingResult(long long full_count_, long long non_izometric_count_)
       : full_count(full_count_), non_izometric_count(non_izometric_count_) {}
   long long full_count;
   long long non_izometric_count;
 } CountingResultT;
 
-class Counter {
+class Counter
+{
 public:
-  Counter() : progress_bar(0, 0), last_printed(0, 0) {
+  Counter() : progress_bar(0, 0), last_printed(0, 0)
+  {
     start = std::chrono::high_resolution_clock::now();
   }
   long long countMatrixSize(const GameState &state,
-                            const vector<int> &players_izometry_coefs) {
+                            const vector<int> &players_izometry_coefs)
+  {
     Result res = state.getResult();
-    if (res == INVALID) {
+    if (res == INVALID)
+    {
       state.printBoard();
       cerr << "BOARD IS INVALID" << endl;
       exit(0);
     }
     long long count = 1;
-    if (res != ONGOING) {
+    if (res != ONGOING)
+    {
       int win_coef = res == PLAYER1WIN
-                               ? PROBABILITY_FACTOR
-                               : (res == PLAYER2WIN ? -PROBABILITY_FACTOR : 0);
-      if (win_coef == 0) {
+                         ? PROBABILITY_FACTOR
+                         : (res == PLAYER2WIN ? -PROBABILITY_FACTOR : 0);
+      if (win_coef == 0)
+      {
         return count;
       }
       array<PlayerKey, 2> history_id =
@@ -42,12 +49,15 @@ public:
       // we construct action_state pair
       matrix_p[history_id] +=
           win_coef / (players_izometry_coefs[0] * players_izometry_coefs[1]);
-      if (matrix_p[history_id] == 0) {
+      if (matrix_p[history_id] == 0)
+      {
         matrix_p.erase(history_id);
       }
 
       return count;
-    } else {
+    }
+    else
+    {
       vector<int> moves = state.getPossibleMoves();
       Player player_turn = state.getPlayerTurn();
       PlayerKey player_state_key =
@@ -55,20 +65,24 @@ public:
       map<PlayerKey, vector<int>> izometries;
       map<int, int> izometry_coefs;
       vector<tuple<GameState, int, PlayerKey>> new_states_with_moves_and_keys;
-      for (int move : moves) {
+      for (int move : moves)
+      {
         auto newState = state.performMove(move);
         new_states_with_moves_and_keys.push_back(
             {newState, move,
              newState
                  .calculateRepresentativeActionStateKeyPair()[player_turn]});
       }
-      for (auto &[state, move, key] : new_states_with_moves_and_keys) {
+      for (auto &[state, move, key] : new_states_with_moves_and_keys)
+      {
         (void)state;
         izometries[key].push_back(move);
       }
       int sum = 0;
-      for (auto &[key, value] : izometries) {
-        for (auto move : value) {
+      for (auto &[key, value] : izometries)
+      {
+        for (auto move : value)
+        {
           izometry_coefs[move] = value.size();
           sum += value.size();
         }
@@ -87,7 +101,8 @@ public:
       assert(current_value == 0 || current_value == -sum);
       player_matrix[player_turn][{player_state_key, player_state_key / 2}] =
           -sum;
-      for (auto &[state, move, key] : new_states_with_moves_and_keys) {
+      for (auto &[state, move, key] : new_states_with_moves_and_keys)
+      {
         (void)key;
         vector<int> new_players_izometry_coefs(players_izometry_coefs);
         new_players_izometry_coefs[player_turn] *= izometry_coefs[move];
@@ -95,7 +110,8 @@ public:
       }
       progress_bar.full_count = max(progress_bar.full_count, count);
       progress_bar.non_izometric_count = matrix_p.size();
-      if (progress_bar.full_count > 2 * last_printed.full_count) {
+      if (progress_bar.full_count > 2 * last_printed.full_count)
+      {
         last_printed = progress_bar;
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
@@ -106,19 +122,23 @@ public:
       return count;
     }
   }
-  void printSolution() {
+  void printSolution()
+  {
     cout << "Matrix size: " << matrix_p.size() << endl;
     unordered_map<int, int> unique_results;
-    for (auto p : matrix_p) {
+    for (auto p : matrix_p)
+    {
       unique_results[p.second]++;
     }
-    for (auto e : unique_results) {
+    for (auto e : unique_results)
+    {
       cout << "Element: " << e.first << ", count: " << e.second << endl;
     }
   }
-  map<array<PlayerKey, 2>, int> getP() {return matrix_p;}
-  map<array<PlayerKey, 2>, int> getC() {return player_matrix[PLAYER2];}
-  map<array<PlayerKey, 2>, int> getD() {return player_matrix[PLAYER1];}
+  const map<array<PlayerKey, 2>, int> &getP() { return matrix_p; }
+  const map<array<PlayerKey, 2>, int> &getC() { return player_matrix[PLAYER2]; }
+  const map<array<PlayerKey, 2>, int> &getD() { return player_matrix[PLAYER1]; }
+
 private:
   map<array<PlayerKey, 2>, int>
       matrix_p; // <player1_action_key, player2_action_key>
@@ -129,7 +149,8 @@ private:
   std::chrono::_V2::system_clock::time_point start;
 };
 
-void test_do_not_lose_move() {
+void test_do_not_lose_move()
+{
   DoNotLoseMoveWhenConflictGameState initialGameState;
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
@@ -139,7 +160,8 @@ void test_do_not_lose_move() {
   Serializer::write_to_file("do_not_lose_move_D", counter.getD(), false);
 }
 
-void test_lose_move() {
+void test_lose_move()
+{
   LoseMoveWhenConflictGameState initialGameState;
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
@@ -149,7 +171,8 @@ void test_lose_move() {
   Serializer::write_to_file("lose_move_D", counter.getD(), false);
 }
 
-int main() {
+int main()
+{
   test_do_not_lose_move();
   test_lose_move();
   return 0;
