@@ -155,9 +155,9 @@ void test_do_not_lose_move()
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
   counter.printSolution();
-  Serializer::write_to_file("do_not_lose_move_P", counter.getP(), false);
-  Serializer::write_to_file("do_not_lose_move_C", counter.getC(), false);
-  Serializer::write_to_file("do_not_lose_move_D", counter.getD(), false);
+  Serializer::write_to_file(DO_NOT_LOSE_MOVE_P_FILENAME, counter.getP(), false);
+  Serializer::write_to_file(DO_NOT_LOSE_MOVE_C_FILENAME, counter.getC(), false);
+  Serializer::write_to_file(DO_NOT_LOSE_MOVE_D_FILENAME, counter.getD(), false);
 }
 
 void test_lose_move()
@@ -166,9 +166,9 @@ void test_lose_move()
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
   counter.printSolution();
-  Serializer::write_to_file("lose_move_P", counter.getP(), false);
-  Serializer::write_to_file("lose_move_C", counter.getC(), false);
-  Serializer::write_to_file("lose_move_D", counter.getD(), false);
+  Serializer::write_to_file(LOSE_MOVE_P_FILENAME, counter.getP(), false);
+  Serializer::write_to_file(LOSE_MOVE_C_FILENAME, counter.getC(), false);
+  Serializer::write_to_file(LOSE_MOVE_D_FILENAME, counter.getD(), false);
 }
 
 int main()

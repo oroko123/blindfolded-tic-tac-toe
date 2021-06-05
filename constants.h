@@ -1,8 +1,18 @@
 #ifndef CONSTANTS
 #define CONSTANTS
 
-#include <bits/stdc++.h>
+#include "bits/stdc++.h"
 using namespace std;
+
+const string DO_NOT_LOSE_MOVE_P_FILENAME = "do_not_lose_move_P";
+const string DO_NOT_LOSE_MOVE_C_FILENAME = "do_not_lose_move_C";
+const string DO_NOT_LOSE_MOVE_D_FILENAME = "do_not_lose_move_D";
+const string DO_NOT_LOSE_MOVE_LOG_FILENAME = "do_not_lose_log";
+
+const string LOSE_MOVE_P_FILENAME = "lose_move_P";
+const string LOSE_MOVE_C_FILENAME = "lose_move_C";
+const string LOSE_MOVE_D_FILENAME = "lose_move_D";
+const string LOSE_MOVE_LOG_FILENAME = "lose_move_log";
 
 enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
 enum Player { PLAYER1, PLAYER2, NONE }; // WARNING!!! DO NOT CHANGE THE ORDER
