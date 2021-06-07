@@ -6,7 +6,7 @@ TEST(SerializationTest, InversionTestTheSame) {
   stringstream ss;
   map<array<PlayerKey, 2>, int> m({{{{1, 3}, 7}, {{2, 5}, 8}, {{13, 333}, 712}}});
   Serializer::serialize(m, ss);
-  auto output = Serializer::unserialize(ss);
+  auto output = Serializer::unserialize<array<PlayerKey, 2>, int>(ss);
   ASSERT_EQ(m, output);
 }
 
@@ -15,7 +15,7 @@ TEST(SerializationTest, InversionTestDifferent) {
   map<array<PlayerKey, 2>, int> m({{{{1, 3}, 7}, {{2, 5}, 8}, {{13, 333}, 713}}});
   map<array<PlayerKey, 2>, int> m2({{{{1, 3}, 7}, {{2, 5}, 8}, {{13, 333}, 712}}});
   Serializer::serialize(m, ss);
-  auto output = Serializer::unserialize(ss);
+  auto output = Serializer::unserialize<array<PlayerKey, 2>, int>(ss);
   ASSERT_NE(m2, output);
 }
 
@@ -23,7 +23,7 @@ TEST(FileTest, InversionTestTheSame) {
   string filename = "/tmp/test1";
   map<array<PlayerKey, 2>, int> m({{{{1, 3}, 7}, {{2, 5}, 8}, {{13, 333}, 712}}});
   Serializer::write_to_file(filename, m, false);
-  auto output = Serializer::read_from_file(filename);
+  auto output = Serializer::read_from_file<array<PlayerKey, 2>, int>(filename);
   ASSERT_EQ(m, output);
 }
 
@@ -32,7 +32,7 @@ TEST(FileTest, InversionTestDifferent) {
   map<array<PlayerKey, 2>, int> m({{{{1, 3}, 7}, {{2, 5}, 8}, {{13, 333}, 713}}});
   map<array<PlayerKey, 2>, int> m2({{{{1, 3}, 7}, {{2, 5}, 8}, {{13, 333}, 712}}});
   Serializer::write_to_file(filename, m, false);
-  auto output = Serializer::read_from_file(filename);
+  auto output = Serializer::read_from_file<array<PlayerKey, 2>, int>(filename);
   ASSERT_NE(m2, output);
 }
 

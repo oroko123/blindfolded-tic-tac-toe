@@ -37,3 +37,6 @@
 # build files
 build/*
 Testing/*
+
+# lp example dir
+lp/*

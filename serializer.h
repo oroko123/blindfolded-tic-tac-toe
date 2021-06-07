@@ -2,23 +2,25 @@
 #define SERIALIZER
 
 #include "constants.h"
+#include "gurobi_c++.h"
 #include <bits/stdc++.h>
 
 using namespace std;
 
 class Serializer {
 public:
-  static void serialize(const map<array<PlayerKey, 2>, int> &matrix,
-                        ostream &stream) {
+  template <typename K, typename V>
+  static void serialize(const map<K, V> &matrix, ostream &stream) {
     for (auto &[key, value] : matrix) {
       stream.write((char *)&key, sizeof(key));
       stream.write((char *)&value, sizeof(value));
     }
   }
-  static map<array<PlayerKey, 2>, int> unserialize(istream &stream) {
-    map<array<PlayerKey, 2>, int> ret;
+  template <typename K, typename V>
+  static map<K, V> unserialize(istream &stream) {
+    map<K, V> ret;
     while (stream.good()) {
-      array<PlayerKey, 2> key;
+      K key;
       int value;
       stream.read((char *)&key, sizeof(key));
       stream.read((char *)&value, sizeof(value));
@@ -26,17 +28,17 @@ public:
     }
     return ret;
   }
-  static map<array<PlayerKey, 2>, int>
-  read_from_file(const string &filename) {
+  template <typename K, typename V>
+  static map<K, V> read_from_file(const string &filename) {
     ifstream file;
     ios_base::openmode flags = ofstream::in | ofstream::binary;
     file.open(filename, flags);
-    auto ret = unserialize(file);
+    auto ret = unserialize<K, V>(file);
     file.close();
     return ret;
   }
-  static void write_to_file(const string &filename,
-                            const map<array<PlayerKey, 2>, int> &matrix,
+  template <typename K, typename V>
+  static void write_to_file(const string &filename, const map<K, V> &matrix,
                             bool append) {
     ofstream file;
     ios_base::openmode flags = ofstream::out | ofstream::binary;
@@ -44,7 +46,7 @@ public:
       flags |= ofstream::app;
     }
     file.open(filename, flags);
-    serialize(matrix, file);
+    serialize<K, V>(matrix, file);
     file.close();
   }
 };
