@@ -7,28 +7,19 @@ using namespace std;
 
 class LinearProgram {
 public:
-  LinearProgram(bool lose_move_, Player player_)
-      : lose_move(lose_move_), player(player_), env(true), model(env) {
-    env.set("LogFile",
-            lose_move ? LOSE_MOVE_LOG_FILENAME : DO_NOT_LOSE_MOVE_LOG_FILENAME);
-    env.start();
-  }
-  LinearProgram(bool lose_move_, Player player_,
+  LinearProgram(bool lose_move_, Player player_, const GRBEnv &env)
+      : lose_move(lose_move_), player(player_), model(env) {}
+  LinearProgram(bool lose_move_, Player player_, const GRBEnv &env,
                 const map<array<PlayerKey, 2>, int> &P_,
                 const map<array<PlayerKey, 2>, int> &C_,
                 const map<array<PlayerKey, 2>, int> &D_)
-      : lose_move(lose_move_), player(player_), env(true), model(env), P(P_),
-        C(C_), D(D_) {
-    env.set("LogFile",
-            lose_move ? LOSE_MOVE_LOG_FILENAME : DO_NOT_LOSE_MOVE_LOG_FILENAME);
-    env.start();
-  }
+      : lose_move(lose_move_), player(player_), model(env), P(P_), C(C_),
+        D(D_) {}
   void Run() {
-    ValidateInput();
-    AddZeroElements();
     AddVariables();
-    SetObjective();
     AddConstraints();
+    SetObjective();
+    FreeMemory();
     Solve();
   }
   void ReadMatrices() {
@@ -49,11 +40,11 @@ public:
     cout << "Writing solution to files..." << endl;
     map<PlayerKey, double> r_res;
     for (auto &[k, v] : r) {
-      r_res[k] = v.get(GRB_DoubleAttr_ObjVal);
+      r_res[k] = v.get(GRB_DoubleAttr_X);
     }
     map<PlayerKey, double> s_res;
     for (auto &[k, v] : s) {
-      s_res[k] = v.get(GRB_DoubleAttr_ObjVal);
+      s_res[k] = v.get(GRB_DoubleAttr_X);
     }
     Serializer::write_to_file(lose_move ? LOSE_MOVE_R2_FILENAME
                                         : DO_NOT_LOSE_MOVE_R2_FILENAME,
@@ -67,37 +58,17 @@ public:
   void PrintSolutionToScreen() {
     cout << "r:" << endl;
     for (auto &[k, v] : r) {
-      cout << k << ": " << v.get(GRB_DoubleAttr_ObjVal) << endl;
+      cout << k << ": " << v.get(GRB_DoubleAttr_X) << endl;
     }
     cout << "s:" << endl;
     for (auto &[k, v] : s) {
-      cout << k << ": " << v.get(GRB_DoubleAttr_ObjVal) << endl;
+      cout << k << ": " << v.get(GRB_DoubleAttr_X) << endl;
     }
   }
 
 private:
-  void ValidateInput() {
-    cout << "Validating input" << endl;
-    for (const auto &matrix : {C, D}) {
-      map<PlayerKey, int> sums;
-      for (const auto &[k, v] : matrix) {
-        sums[k[0]] += v;
-      }
-      for (const auto &[k, v] : sums) {
-        (void)k;
-        assert(v == 0);
-      }
-    }
-  }
-  void AddZeroElements() {
-    cout << "Adding starting elements to C and D" << endl;
-    C.insert({{0, 1}, 1});
-    D.insert({{0, 1}, 1});
-  }
   void AddVariables() {
     cout << "Adding variables s and r" << endl;
-    set<PlayerKey> player_states[2];
-    set<PlayerKey> player_actionstates[2];
     for (const auto &[k, v] : C) {
       (void)v;
       player_states[PLAYER2].insert(get<0>(k));
@@ -135,26 +106,30 @@ private:
   void AddConstraints() {
     cout << "Adding constraints" << endl;
     map<PlayerKey, GRBLinExpr> lhs1, rhs1, lhs2;
-    for (auto [k, v] : D) {
+    for (const auto &[k, v] : D) {
       PlayerKey j = get<0>(k);
       PlayerKey b = get<1>(k);
       lhs1[b] += v * r[j];
     }
-    for (auto [k, v] : P) {
-      PlayerKey a = get<0>(k);
-      PlayerKey b = get<1>(k);
+    for (const auto &[k, v] : P) {
+      PlayerKey b = get<0>(k);
+      PlayerKey a = get<1>(k);
       rhs1[b] += v * s[a];
     }
-    for (auto e : player_actionstates[PLAYER1]) {
-      model.addConstr(lhs1[e], GRB_GREATER_EQUAL, rhs1[e]);
+    for (PlayerKey b : player_actionstates[PLAYER1]) {
+      model.addConstr(lhs1[b], GRB_GREATER_EQUAL, rhs1[b]);
     }
-    for (auto [k, v] : C) {
+    for (const auto &[k, v] : C) {
       PlayerKey i = get<0>(k);
       PlayerKey a = get<1>(k);
-      lhs2[a] += v * s[i];
+      lhs2[i] += v * s[a];
     }
-    for (auto e : player_actionstates[PLAYER2]) {
-      model.addConstr(lhs2[e], GRB_EQUAL, C[{0, e}]);
+    for (auto i : player_states[PLAYER2]) {
+      int rhs = 0;
+      if (i == 0) {
+        rhs = 1;
+      }
+      model.addConstr(lhs2[i], GRB_EQUAL, rhs);
     }
   }
   void SetObjective() {
@@ -162,13 +137,23 @@ private:
     GRBLinExpr obj = r[0];
     model.setObjective(obj, GRB_MINIMIZE);
   }
+  void FreeMemory() {
+    P.clear();
+    C.clear();
+    D.clear();
+    for (auto player : {PLAYER1, PLAYER2}) {
+      player_states[player].clear();
+      player_actionstates[player].clear();
+    }
+  }
   void Solve() {
+    model.write(lose_move ? LOSE_MOVE_LP_PLAYER2_FILENAME
+                          : DO_NOT_LOSE_MOVE_LP_PLAYER2_FILENAME);
     cout << "Solving" << endl;
     model.optimize();
   }
   bool lose_move;
   Player player;
-  GRBEnv env;
   GRBModel model;
   map<PlayerKey, GRBVar> r;
   map<PlayerKey, GRBVar> s;
@@ -187,21 +172,31 @@ void test_poker() {
       {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
   map<array<PlayerKey, 2>, int> D = {
       {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
-  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, P, C, D);
+  Serializer::write_to_file(LOSE_MOVE_P_FILENAME, P, false);
+  Serializer::write_to_file(LOSE_MOVE_C_FILENAME, C, false);
+  Serializer::write_to_file(LOSE_MOVE_D_FILENAME, D, false);
+  GRBEnv env(true);
+  env.set("LogFile", LOG_FILENAME);
+  env.start();
+  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env, P,
+                               C, D);
   linear_program.Run();
   linear_program.PrintSolutionToScreen();
 }
 
 void run_lose_move_player2() {
-  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2);
+  GRBEnv env(true);
+  env.set("LogFile", LOG_FILENAME);
+  env.start();
+  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env);
   linear_program.ReadMatrices();
   linear_program.Run();
   linear_program.PrintSolutionToFile();
 }
 int main() {
   try {
-    test_poker();
-    // run_lose_move_player2();
+    // test_poker();
+    run_lose_move_player2();
   } catch (GRBException e) {
     cout << e.getErrorCode() << endl;
     cout << e.getMessage() << endl;

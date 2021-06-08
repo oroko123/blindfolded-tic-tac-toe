@@ -4,6 +4,9 @@
 #include "bits/stdc++.h"
 using namespace std;
 
+
+const string LOG_FILENAME = "linear_program_log";
+
 const string DO_NOT_LOSE_MOVE_P_FILENAME = "do_not_lose_move_P";
 const string DO_NOT_LOSE_MOVE_C_FILENAME = "do_not_lose_move_C";
 const string DO_NOT_LOSE_MOVE_D_FILENAME = "do_not_lose_move_D";
@@ -11,7 +14,7 @@ const string DO_NOT_LOSE_MOVE_R1_FILENAME = "do_not_lose_move_R1";
 const string DO_NOT_LOSE_MOVE_R2_FILENAME = "do_not_lose_move_R2";
 const string DO_NOT_LOSE_MOVE_S1_FILENAME = "do_not_lose_move_S1";
 const string DO_NOT_LOSE_MOVE_S2_FILENAME = "do_not_lose_move_S2";
-const string DO_NOT_LOSE_MOVE_LOG_FILENAME = "do_not_lose_log";
+const string DO_NOT_LOSE_MOVE_LP_PLAYER2_FILENAME = "do_not_lose_move_GUROBI_OUT2.lp";
 
 const string LOSE_MOVE_P_FILENAME = "lose_move_P";
 const string LOSE_MOVE_C_FILENAME = "lose_move_C";
@@ -20,7 +23,7 @@ const string LOSE_MOVE_R1_FILENAME = "lose_move_R1";
 const string LOSE_MOVE_R2_FILENAME = "lose_move_R2";
 const string LOSE_MOVE_S1_FILENAME = "lose_move_S1";
 const string LOSE_MOVE_S2_FILENAME = "lose_move_S2";
-const string LOSE_MOVE_LOG_FILENAME = "lose_move_log";
+const string LOSE_MOVE_LP_PLAYER2_FILENAME = "lose_move_GUROBI_OUT2.lp";
 
 enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
 enum Player { PLAYER1, PLAYER2, NONE }; // WARNING!!! DO NOT CHANGE THE ORDER
