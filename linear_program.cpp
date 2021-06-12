@@ -104,32 +104,97 @@ private:
 
   // currently for PLAYER2
   void AddConstraints() {
+    std::chrono::_V2::system_clock::time_point start =
+        std::chrono::high_resolution_clock::now();
     cout << "Adding constraints" << endl;
-    map<PlayerKey, GRBLinExpr> lhs1, rhs1, lhs2;
+    int total_constraints = D.size() + P.size() + C.size();
+    int added_constraints = 0;
+    int last_added_constraints = 0;
+
+    map<array<PlayerKey, 2>, int> DT;
     for (const auto &[k, v] : D) {
       PlayerKey j = get<0>(k);
       PlayerKey b = get<1>(k);
-      lhs1[b] += v * r[j];
+      DT.insert({{b, j}, v});
     }
-    for (const auto &[k, v] : P) {
-      PlayerKey b = get<0>(k);
-      PlayerKey a = get<1>(k);
-      rhs1[b] += v * s[a];
-    }
-    for (PlayerKey b : player_actionstates[PLAYER1]) {
-      model.addConstr(lhs1[b], GRB_GREATER_EQUAL, rhs1[b]);
-    }
-    for (const auto &[k, v] : C) {
-      PlayerKey i = get<0>(k);
-      PlayerKey a = get<1>(k);
-      lhs2[i] += v * s[a];
-    }
-    for (auto i : player_states[PLAYER2]) {
-      int rhs = 0;
-      if (i == 0) {
-        rhs = 1;
+
+    GRBLinExpr lhs, rhs;
+    PlayerKey curr_b = get<0>(P.begin()->first);
+    auto p_it = P.begin();
+    auto dt_it = DT.begin();
+    auto c_it = C.begin();
+    while (p_it != P.end()) {
+      PlayerKey b_p = get<0>(p_it->first);
+      PlayerKey a = get<1>(p_it->first);
+      int v_p = p_it->second;
+      p_it = P.erase(p_it);
+      if (b_p == curr_b) {
+        lhs += v_p * s[a];
+      } else {
+        while (dt_it != DT.end()) {
+          PlayerKey b_dt = get<0>(dt_it->first);
+          PlayerKey j = get<1>(dt_it->first);
+          int v_dt = dt_it->second;
+          dt_it = DT.erase(dt_it);
+          if (b_dt == curr_b) {
+            rhs += v_dt * r[j];
+          } else {
+            model.addConstr(lhs, GRB_GREATER_EQUAL, rhs);
+            added_constraints += lhs.size() + rhs.size();
+            if (added_constraints - last_added_constraints > 10'000'000) {
+              cout << "Added " << added_constraints << " out of "
+                   << total_constraints << " ("
+                   << (float)added_constraints / total_constraints * 100 << ")%"
+                   << endl;
+              last_added_constraints = added_constraints;
+              auto curr = std::chrono::high_resolution_clock::now();
+              std::chrono::duration<double> elapsed = curr - start;
+              cout << "Elapsed time: " << elapsed.count() << " s" << endl;
+            }
+            lhs.clear();
+            rhs.clear();
+            assert(b_p == b_dt);
+            curr_b = b_p;
+            lhs += v_p * s[a];
+            rhs += v_dt * r[j];
+            break;
+          }
+        }
       }
-      model.addConstr(lhs2[i], GRB_EQUAL, rhs);
+    }
+    while (dt_it != DT.end()) {
+      PlayerKey b_dt = get<0>(dt_it->first);
+      PlayerKey j = get<1>(dt_it->first);
+      int v_dt = dt_it->second;
+      dt_it = DT.erase(dt_it);
+      assert(b_dt == curr_b);
+      rhs += v_dt * r[j];
+    }
+    assert((lhs.size() == 0 && rhs.size() == 0) ||
+           (lhs.size() > 0 && rhs.size() > 0));
+    if (lhs.size() > 0 && rhs.size() > 0) {
+      model.addConstr(lhs, GRB_GREATER_EQUAL, rhs);
+      lhs.clear();
+      rhs.clear();
+    }
+    PlayerKey curr_i = get<0>(C.begin()->first);
+    int rhs_const = 1;
+    while (c_it != C.end()) {
+      PlayerKey i = get<0>(c_it->first);
+      PlayerKey a = get<1>(c_it->first);
+      int v_c = c_it->second;
+      c_it = C.erase(c_it);
+      if (curr_i == i) {
+        lhs += v_c * s[a];
+      } else {
+        model.addConstr(lhs, GRB_EQUAL, rhs);
+        lhs.clear();
+        rhs = 0;
+      }
+    }
+    if (lhs.size() > 0) {
+      model.addConstr(lhs, GRB_EQUAL, rhs_const);
+      lhs.clear();
     }
   }
   void SetObjective() {
@@ -166,8 +231,9 @@ private:
 
 void test_poker() {
 
-  map<array<PlayerKey, 2>, int> P = {{{1, 2}, 1}, {{1, 3}, -1}, {{2, 1}, -1},
-                                     {{2, 3}, 1}, {{3, 1}, 1},  {{3, 2}, -1}};
+  map<array<PlayerKey, 2>, int> P = {{{0, 0}, 0},  {{1, 2}, 1}, {{1, 3}, -1},
+                                     {{2, 1}, -1}, {{2, 3}, 1}, {{3, 1}, 1},
+                                     {{3, 2}, -1}};
   map<array<PlayerKey, 2>, int> C = {
       {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
   map<array<PlayerKey, 2>, int> D = {
@@ -175,6 +241,11 @@ void test_poker() {
   Serializer::write_to_file(LOSE_MOVE_P_FILENAME, P, false);
   Serializer::write_to_file(LOSE_MOVE_C_FILENAME, C, false);
   Serializer::write_to_file(LOSE_MOVE_D_FILENAME, D, false);
+
+  std::ofstream ofs;
+  ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
+  ofs.close();
+
   GRBEnv env(true);
   env.set("LogFile", LOG_FILENAME);
   env.start();
@@ -185,6 +256,10 @@ void test_poker() {
 }
 
 void run_lose_move_player2() {
+  std::ofstream ofs;
+  ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
+  ofs.close();
+
   GRBEnv env(true);
   env.set("LogFile", LOG_FILENAME);
   env.start();
@@ -193,6 +268,7 @@ void run_lose_move_player2() {
   linear_program.Run();
   linear_program.PrintSolutionToFile();
 }
+
 int main() {
   try {
     // test_poker();
