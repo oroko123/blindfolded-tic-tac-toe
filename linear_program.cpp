@@ -3,7 +3,11 @@
 #include "gurobi_c++.h"
 #include "serializer.h"
 
+#include <experimental/filesystem>
+
 using namespace std;
+
+namespace fs = std::experimental::filesystem;
 
 class LinearProgram {
 public:
@@ -24,6 +28,18 @@ public:
   }
   void ReadMatrices() {
     cout << "Reading matrices" << endl;
+    if (!fs::exists(lose_move ? LOSE_MOVE_P_FILENAME : DO_NOT_LOSE_MOVE_P_FILENAME)) {
+      cout << "There is no P matrix in current dir" << endl;
+      exit(1);
+    }
+    if (!fs::exists(lose_move ? LOSE_MOVE_C_FILENAME : DO_NOT_LOSE_MOVE_C_FILENAME)) {
+      cout << "There is no C matrix in current dir" << endl;
+      exit(1);
+    }
+    if (!fs::exists(lose_move ? LOSE_MOVE_D_FILENAME : DO_NOT_LOSE_MOVE_D_FILENAME)) {
+      cout << "There is no D matrix in current dir" << endl;
+      exit(1);
+    }
     try {
       P = Serializer::read_from_file<array<PlayerKey, 2>, int>(
           lose_move ? LOSE_MOVE_P_FILENAME : DO_NOT_LOSE_MOVE_P_FILENAME);
@@ -238,9 +254,6 @@ void test_poker() {
       {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
   map<array<PlayerKey, 2>, int> D = {
       {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
-  Serializer::write_to_file(LOSE_MOVE_P_FILENAME, P, false);
-  Serializer::write_to_file(LOSE_MOVE_C_FILENAME, C, false);
-  Serializer::write_to_file(LOSE_MOVE_D_FILENAME, D, false);
 
   std::ofstream ofs;
   ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
@@ -263,7 +276,7 @@ void run_lose_move_player2() {
   GRBEnv env(true);
   env.set("LogFile", LOG_FILENAME);
   env.start();
-  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env);
+  LinearProgram linear_program(/*lose_move=*/false, /*player=*/PLAYER2, env);
   linear_program.ReadMatrices();
   linear_program.Run();
   linear_program.PrintSolutionToFile();
