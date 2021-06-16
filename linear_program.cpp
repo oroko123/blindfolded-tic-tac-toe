@@ -20,6 +20,7 @@ public:
       : lose_move(lose_move_), player(player_), model(env), P(P_), C(C_),
         D(D_) {}
   void Run() {
+    AddStartingElements();
     AddVariables();
     AddConstraints();
     SetObjective();
@@ -28,15 +29,18 @@ public:
   }
   void ReadMatrices() {
     cout << "Reading matrices" << endl;
-    if (!fs::exists(lose_move ? LOSE_MOVE_P_FILENAME : DO_NOT_LOSE_MOVE_P_FILENAME)) {
+    if (!fs::exists(lose_move ? LOSE_MOVE_P_FILENAME
+                              : DO_NOT_LOSE_MOVE_P_FILENAME)) {
       cout << "There is no P matrix in current dir" << endl;
       exit(1);
     }
-    if (!fs::exists(lose_move ? LOSE_MOVE_C_FILENAME : DO_NOT_LOSE_MOVE_C_FILENAME)) {
+    if (!fs::exists(lose_move ? LOSE_MOVE_C_FILENAME
+                              : DO_NOT_LOSE_MOVE_C_FILENAME)) {
       cout << "There is no C matrix in current dir" << endl;
       exit(1);
     }
-    if (!fs::exists(lose_move ? LOSE_MOVE_D_FILENAME : DO_NOT_LOSE_MOVE_D_FILENAME)) {
+    if (!fs::exists(lose_move ? LOSE_MOVE_D_FILENAME
+                              : DO_NOT_LOSE_MOVE_D_FILENAME)) {
       cout << "There is no D matrix in current dir" << endl;
       exit(1);
     }
@@ -83,6 +87,10 @@ public:
   }
 
 private:
+  void AddStartingElements() {
+    C.insert({{1, 0}, 1});
+    D.insert({{1, 0}, 1});
+  }
   void AddVariables() {
     cout << "Adding variables s and r" << endl;
     for (const auto &[k, v] : C) {
@@ -135,66 +143,49 @@ private:
     }
 
     GRBLinExpr lhs, rhs;
-    PlayerKey curr_b = get<0>(P.begin()->first);
     auto p_it = P.begin();
     auto dt_it = DT.begin();
-    auto c_it = C.begin();
-    while (p_it != P.end()) {
-      PlayerKey b_p = get<0>(p_it->first);
-      PlayerKey a = get<1>(p_it->first);
-      int v_p = p_it->second;
-      p_it = P.erase(p_it);
-      if (b_p == curr_b) {
-        lhs += v_p * s[a];
-      } else {
-        while (dt_it != DT.end()) {
-          PlayerKey b_dt = get<0>(dt_it->first);
-          PlayerKey j = get<1>(dt_it->first);
-          int v_dt = dt_it->second;
-          dt_it = DT.erase(dt_it);
-          if (b_dt == curr_b) {
-            rhs += v_dt * r[j];
-          } else {
-            model.addConstr(lhs, GRB_GREATER_EQUAL, rhs);
-            added_constraints += lhs.size() + rhs.size();
-            if (added_constraints - last_added_constraints > 10'000'000) {
-              cout << "Added " << added_constraints << " out of "
-                   << total_constraints << " ("
-                   << (float)added_constraints / total_constraints * 100 << ")%"
-                   << endl;
-              last_added_constraints = added_constraints;
-              auto curr = std::chrono::high_resolution_clock::now();
-              std::chrono::duration<double> elapsed = curr - start;
-              cout << "Elapsed time: " << elapsed.count() << " s" << endl;
-            }
-            lhs.clear();
-            rhs.clear();
-            assert(b_p == b_dt);
-            curr_b = b_p;
-            lhs += v_p * s[a];
-            rhs += v_dt * r[j];
-            break;
-          }
+    for (auto b : player_actionstates[PLAYER1]) {
+      while (p_it != P.end()) {
+        PlayerKey b_p = get<0>(p_it->first);
+        PlayerKey a = get<1>(p_it->first);
+        int v_p = p_it->second;
+        if (b_p == b) {
+          lhs += v_p * s[a];
+          p_it = P.erase(p_it);
+        } else {
+          break;
         }
       }
-    }
-    while (dt_it != DT.end()) {
-      PlayerKey b_dt = get<0>(dt_it->first);
-      PlayerKey j = get<1>(dt_it->first);
-      int v_dt = dt_it->second;
-      dt_it = DT.erase(dt_it);
-      assert(b_dt == curr_b);
-      rhs += v_dt * r[j];
-    }
-    assert((lhs.size() == 0 && rhs.size() == 0) ||
-           (lhs.size() > 0 && rhs.size() > 0));
-    if (lhs.size() > 0 && rhs.size() > 0) {
+      while (dt_it != DT.end()) {
+        PlayerKey b_dt = get<0>(dt_it->first);
+        PlayerKey j = get<1>(dt_it->first);
+        int v_dt = dt_it->second;
+        if (b_dt == b) {
+          rhs += v_dt * r[j];
+          dt_it = DT.erase(dt_it);
+        } else {
+          break;
+        }
+      }
       model.addConstr(lhs, GRB_GREATER_EQUAL, rhs);
+      added_constraints += lhs.size() + rhs.size();
       lhs.clear();
       rhs.clear();
+      if (added_constraints - last_added_constraints > 10'000'000) {
+        cout << "Added " << added_constraints << " out of " << total_constraints
+             << " (" << (float)added_constraints / total_constraints * 100
+             << ")%" << endl;
+        last_added_constraints = added_constraints;
+        auto curr = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = curr - start;
+        cout << "Elapsed time: " << elapsed.count() << " s" << endl;
+      }
     }
-    PlayerKey curr_i = get<0>(C.begin()->first);
+
     int rhs_const = 1;
+    auto c_it = C.begin();
+    int curr_i = get<0>(c_it->first);
     while (c_it != C.end()) {
       PlayerKey i = get<0>(c_it->first);
       PlayerKey a = get<1>(c_it->first);

@@ -52,7 +52,6 @@ char playerToSign(Player player) {
 
 const int SIMULATIONS_NUM = 10000;
 const int FIELDS_NUM = 9;
-const long long THREE_TO_POWER_NINE = 19683;
 const long long PROBABILITY_FACTOR = 64; // 2^6
 
 const vector<int> id = {0, 1, 2, 3, 4, 5, 6, 7, 8};
