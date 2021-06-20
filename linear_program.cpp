@@ -206,7 +206,7 @@ private:
   }
   void SetObjective() {
     cout << "Setting objective" << endl;
-    GRBLinExpr obj = r[0];
+    GRBLinExpr obj = r[1];
     model.setObjective(obj, GRB_MINIMIZE);
   }
   void FreeMemory() {
