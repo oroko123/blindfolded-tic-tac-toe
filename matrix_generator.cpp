@@ -1,6 +1,6 @@
-#include "board.h"
-#include "constants.h"
-#include "state.h"
+#include "board2.h"
+#include "constants2.h"
+#include "state2.h"
 #include "serializer.h"
 #include <bits/stdc++.h>
 
@@ -21,7 +21,7 @@ public:
   {
     start = std::chrono::high_resolution_clock::now();
   }
-  long long countMatrixSize(const GameState &state,
+  long long countMatrixSize(const GameState2 &state,
                             const vector<int> &players_izometry_coefs)
   {
     Result res = state.getResult();
@@ -64,7 +64,7 @@ public:
           state.calculateRepresentativeStateKeyPair()[player_turn];
       map<PlayerKey, vector<int>> izometries;
       map<int, int> izometry_coefs;
-      vector<tuple<GameState, int, PlayerKey>> new_states_with_moves_and_keys;
+      vector<tuple<GameState2, int, PlayerKey>> new_states_with_moves_and_keys;
       for (int move : moves)
       {
         auto newState = state.performMove(move);
@@ -151,7 +151,7 @@ private:
 
 void test_do_not_lose_move()
 {
-  DoNotLoseMoveWhenConflictGameState initialGameState;
+  DoNotLoseMoveWhenConflictGameState2 initialGameState;
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
   counter.printSolution();
@@ -162,7 +162,7 @@ void test_do_not_lose_move()
 
 void test_lose_move()
 {
-  LoseMoveWhenConflictGameState initialGameState;
+  LoseMoveWhenConflictGameState2 initialGameState;
   Counter counter;
   counter.countMatrixSize(initialGameState, {1LL, 1LL});
   counter.printSolution();
