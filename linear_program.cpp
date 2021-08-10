@@ -22,7 +22,7 @@ public:
   void Run() {
     AddStartingElements();
     AddVariables();
-    AddConstraints();
+    AddConstraints(player);
     SetObjective();
     FreeMemory();
     Solve();
@@ -88,8 +88,8 @@ public:
 
 private:
   void AddStartingElements() {
-    C.insert({{1, 0}, 1});
-    D.insert({{1, 0}, 1});
+    C.insert({{0, 0}, 1});
+    D.insert({{0, 0}, 1});
   }
   void AddVariables() {
     cout << "Adding variables s and r" << endl;
@@ -126,8 +126,8 @@ private:
     }
   }
 
-  // currently for PLAYER2
-  void AddConstraints() {
+  // naming as for PLAYER2.
+  void AddConstraints(Player player) {
     std::chrono::_V2::system_clock::time_point start =
         std::chrono::high_resolution_clock::now();
     cout << "Adding constraints" << endl;
@@ -146,7 +146,7 @@ private:
       GRBLinExpr lhs, rhs;
       auto p_it = P.begin();
       auto dt_it = DT.begin();
-      for (auto b : player_actionstates[PLAYER1]) {
+      for (auto b : player_actionstates[getOppositePlayer(player)]) {
         while (p_it != P.end()) {
           PlayerKey b_p = get<0>(p_it->first);
           PlayerKey a = get<1>(p_it->first);
@@ -196,13 +196,14 @@ private:
         PlayerKey i = get<0>(c_it->first);
         PlayerKey a = get<1>(c_it->first);
         int v_c = c_it->second;
-        c_it = C.erase(c_it);
         if (curr_i == i) {
           lhs += v_c * s[a];
+          c_it = C.erase(c_it);
         } else {
           model.addConstr(lhs, GRB_EQUAL, rhs_const);
           lhs.clear();
           rhs_const = 0;
+          curr_i = i;
         }
       }
       if (lhs.size() > 0) {
@@ -213,7 +214,7 @@ private:
   }
   void SetObjective() {
     cout << "Setting objective" << endl;
-    GRBLinExpr obj = r[1];
+    GRBLinExpr obj = r[0];
     model.setObjective(obj, GRB_MINIMIZE);
   }
   void FreeMemory() {
@@ -243,29 +244,6 @@ private:
   map<array<PlayerKey, 2>, int> D;
 };
 
-void test_poker() {
-
-  map<array<PlayerKey, 2>, int> P = {{{0, 0}, 0},  {{1, 2}, 1}, {{1, 3}, -1},
-                                     {{2, 1}, -1}, {{2, 3}, 1}, {{3, 1}, 1},
-                                     {{3, 2}, -1}};
-  map<array<PlayerKey, 2>, int> C = {
-      {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
-  map<array<PlayerKey, 2>, int> D = {
-      {{0, 0}, -1}, {{0, 1}, 1}, {{0, 2}, 1}, {{0, 3}, 1}};
-
-  std::ofstream ofs;
-  ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
-  ofs.close();
-
-  GRBEnv env(true);
-  env.set("LogFile", LOG_FILENAME);
-  env.start();
-  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env, P,
-                               C, D);
-  linear_program.Run();
-  linear_program.PrintSolutionToScreen();
-}
-
 void run_lose_move_player2() {
   std::ofstream ofs;
   ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
@@ -274,10 +252,11 @@ void run_lose_move_player2() {
   GRBEnv env(true);
   env.set("LogFile", LOG_FILENAME);
   env.start();
-  LinearProgram linear_program(/*lose_move=*/false, /*player=*/PLAYER2, env);
+  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env);
   linear_program.ReadMatrices();
   linear_program.Run();
   linear_program.PrintSolutionToFile();
+  linear_program.PrintSolutionToScreen();
 }
 
 int main() {
