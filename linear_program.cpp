@@ -142,66 +142,73 @@ private:
       DT.insert({{b, j}, v});
     }
 
-    GRBLinExpr lhs, rhs;
-    auto p_it = P.begin();
-    auto dt_it = DT.begin();
-    for (auto b : player_actionstates[PLAYER1]) {
-      while (p_it != P.end()) {
-        PlayerKey b_p = get<0>(p_it->first);
-        PlayerKey a = get<1>(p_it->first);
-        int v_p = p_it->second;
-        if (b_p == b) {
-          lhs += v_p * s[a];
-          p_it = P.erase(p_it);
-        } else {
-          break;
+    {
+      GRBLinExpr lhs, rhs;
+      auto p_it = P.begin();
+      auto dt_it = DT.begin();
+      for (auto b : player_actionstates[PLAYER1]) {
+        while (p_it != P.end()) {
+          PlayerKey b_p = get<0>(p_it->first);
+          PlayerKey a = get<1>(p_it->first);
+          int v_p = p_it->second;
+          if (b_p == b) {
+            lhs += v_p * s[a];
+            p_it = P.erase(p_it);
+          } else {
+            break;
+          }
         }
-      }
-      while (dt_it != DT.end()) {
-        PlayerKey b_dt = get<0>(dt_it->first);
-        PlayerKey j = get<1>(dt_it->first);
-        int v_dt = dt_it->second;
-        if (b_dt == b) {
-          rhs += v_dt * r[j];
-          dt_it = DT.erase(dt_it);
-        } else {
-          break;
+        while (dt_it != DT.end()) {
+          PlayerKey b_dt = get<0>(dt_it->first);
+          PlayerKey j = get<1>(dt_it->first);
+          int v_dt = dt_it->second;
+          if (b_dt == b) {
+            rhs += v_dt * r[j];
+            dt_it = DT.erase(dt_it);
+          } else {
+            break;
+          }
         }
-      }
-      model.addConstr(lhs, GRB_GREATER_EQUAL, rhs);
-      added_constraints += lhs.size() + rhs.size();
-      lhs.clear();
-      rhs.clear();
-      if (added_constraints - last_added_constraints > 10'000'000) {
-        cout << "Added " << added_constraints << " out of " << total_constraints
-             << " (" << (float)added_constraints / total_constraints * 100
-             << ")%" << endl;
-        last_added_constraints = added_constraints;
-        auto curr = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = curr - start;
-        cout << "Elapsed time: " << elapsed.count() << " s" << endl;
-      }
-    }
-
-    int rhs_const = 1;
-    auto c_it = C.begin();
-    int curr_i = get<0>(c_it->first);
-    while (c_it != C.end()) {
-      PlayerKey i = get<0>(c_it->first);
-      PlayerKey a = get<1>(c_it->first);
-      int v_c = c_it->second;
-      c_it = C.erase(c_it);
-      if (curr_i == i) {
-        lhs += v_c * s[a];
-      } else {
-        model.addConstr(lhs, GRB_EQUAL, rhs);
+        model.addConstr(lhs, GRB_LESS_EQUAL, rhs);
+        added_constraints += lhs.size() + rhs.size();
         lhs.clear();
-        rhs = 0;
+        rhs.clear();
+        if (added_constraints - last_added_constraints > 10'000'000) {
+          cout << "Added " << added_constraints << " out of "
+               << total_constraints << " ("
+               << (float)added_constraints / total_constraints * 100 << ")%"
+               << endl;
+          last_added_constraints = added_constraints;
+          auto curr = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double> elapsed = curr - start;
+          cout << "Elapsed time: " << elapsed.count() << " s" << endl;
+        }
       }
     }
-    if (lhs.size() > 0) {
-      model.addConstr(lhs, GRB_EQUAL, rhs_const);
-      lhs.clear();
+    assert(P.empty());
+    assert(DT.empty());
+    {
+      GRBLinExpr lhs;
+      int rhs_const = 1;
+      auto c_it = C.begin();
+      int curr_i = get<0>(c_it->first);
+      while (c_it != C.end()) {
+        PlayerKey i = get<0>(c_it->first);
+        PlayerKey a = get<1>(c_it->first);
+        int v_c = c_it->second;
+        c_it = C.erase(c_it);
+        if (curr_i == i) {
+          lhs += v_c * s[a];
+        } else {
+          model.addConstr(lhs, GRB_EQUAL, rhs_const);
+          lhs.clear();
+          rhs_const = 0;
+        }
+      }
+      if (lhs.size() > 0) {
+        model.addConstr(lhs, GRB_EQUAL, rhs_const);
+        lhs.clear();
+      }
     }
   }
   void SetObjective() {
