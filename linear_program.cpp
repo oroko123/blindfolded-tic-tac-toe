@@ -215,9 +215,6 @@ private:
         lhs.clear();
       }
     }
-    if (player == PLAYER1) {
-      swap(C, D);
-    }
   }
   void SetObjective() {
     cout << "Setting objective" << endl;
@@ -259,7 +256,7 @@ void run_lose_move_player2() {
   GRBEnv env(true);
   env.set("LogFile", LOG_FILENAME);
   env.start();
-  LinearProgram linear_program(/*lose_move=*/false, /*player=*/PLAYER2, env);
+  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env);
   linear_program.ReadMatrices();
   linear_program.Run();
   linear_program.PrintSolutionToFile();
