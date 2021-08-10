@@ -12,13 +12,17 @@ namespace fs = std::experimental::filesystem;
 class LinearProgram {
 public:
   LinearProgram(bool lose_move_, Player player_, const GRBEnv &env)
-      : lose_move(lose_move_), player(player_), model(env) {}
+      : lose_move(lose_move_), player(player_), model(env) {
+    model.set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+  }
   LinearProgram(bool lose_move_, Player player_, const GRBEnv &env,
                 const map<array<PlayerKey, 2>, int> &P_,
                 const map<array<PlayerKey, 2>, int> &C_,
                 const map<array<PlayerKey, 2>, int> &D_)
       : lose_move(lose_move_), player(player_), model(env), P(P_), C(C_),
-        D(D_) {}
+        D(D_) {
+    model.set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+  }
   void Run() {
     AddStartingElements();
     AddVariables();
