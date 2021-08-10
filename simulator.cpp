@@ -1,7 +1,7 @@
 #include "agent.h"
-#include "board.h"
-#include "constants.h"
-#include "state.h"
+#include "board2.h"
+#include "constants2.h"
+#include "state2.h"
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -19,11 +19,11 @@ public:
     }
     return game_state.getResult();
   }
-  void reset() { game_state = GameState(/*lose_move_=*/false); }
+  void reset() { game_state = GameState2(/*lose_move_=*/false); }
 
 private:
   vector<Agent *> agents;
-  GameState game_state;
+  GameState2 game_state;
 };
 
 int main() {

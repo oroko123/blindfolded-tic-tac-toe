@@ -59,9 +59,9 @@ const vector<int> ox = {2, 3, 0, 1};
 const vector<int> oy = {1, 0, 3, 2};
 const vector<int> diag = {0, 2, 1, 3};
 const vector<int> sec_diag = {3, 1, 2, 0};
-const vector<int> deg_90 = {1, 2, 3, 0};
-const vector<int> deg_180 = {2, 3, 0, 1};
-const vector<int> deg_270 = {3, 0, 1, 2};
+const vector<int> deg_90 = {1, 3, 0, 2};
+const vector<int> deg_180 = {3, 2, 1, 0};
+const vector<int> deg_270 = {2, 0, 3, 1};
 const vector<vector<int>> permutations = {id,       ox,     oy,      diag,
                                           sec_diag, deg_90, deg_180, deg_270};
 

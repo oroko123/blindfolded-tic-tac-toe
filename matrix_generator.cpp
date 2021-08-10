@@ -92,15 +92,24 @@ public:
         // state.printBoard();
         // cerr << playerToSign(player_turn) << " " << current_value << " " << key
         //      << endl;
+        if (current_value != 0 && current_value != (int)value.size()) {
+          for (auto& [k ,v] :izometry_coefs) {
+            cerr << k << " " << v << endl;
+          }
+          cerr << key << endl;
+          for (auto& x : value) {
+            cerr << x << " ";
+          }
+        }
         assert(current_value == 0 || current_value == (int)value.size());
         player_matrix[player_turn][{player_state_key, key}] = value.size();
       }
       // we put negative value for the previous action-move;
       auto current_value =
           player_matrix[player_turn][{player_state_key, player_state_key / 2}];
-      assert(current_value == 0 || current_value == -sum);
+      assert(current_value == 0 || current_value == -1);
       player_matrix[player_turn][{player_state_key, player_state_key / 2}] =
-          -sum;
+          -1;
       for (auto &[state, move, key] : new_states_with_moves_and_keys)
       {
         (void)key;
