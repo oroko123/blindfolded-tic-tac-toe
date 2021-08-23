@@ -252,7 +252,11 @@ private:
   map<array<PlayerKey, 2>, int> D;
 };
 
-void run_lose_move_player2() {
+void run(bool lose_move, Player player) {
+  if (player != PLAYER2) {
+    cerr << "Linear program for PLAYER1 not implemented yet" << endl;
+    exit(0);
+  }
   std::ofstream ofs;
   ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
   ofs.close();
@@ -260,7 +264,7 @@ void run_lose_move_player2() {
   GRBEnv env(true);
   env.set("LogFile", LOG_FILENAME);
   env.start();
-  LinearProgram linear_program(/*lose_move=*/true, /*player=*/PLAYER2, env);
+  LinearProgram linear_program(lose_move, player, env);
   linear_program.ReadMatrices();
   linear_program.Run();
   linear_program.PrintSolutionToFile();
@@ -269,8 +273,7 @@ void run_lose_move_player2() {
 
 int main() {
   try {
-    // test_poker();
-    run_lose_move_player2();
+    run(/*lose_move=*/true, /*player=*/PLAYER2);
   } catch (GRBException e) {
     cout << e.getErrorCode() << endl;
     cout << e.getMessage() << endl;
