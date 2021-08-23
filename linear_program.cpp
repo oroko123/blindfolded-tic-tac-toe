@@ -253,12 +253,28 @@ void run(bool lose_move, Player player) {
     cerr << "Linear program for PLAYER1 not implemented yet" << endl;
     exit(0);
   }
+
+  std::string full_log_filename = LOG_FILENAME;
+  if (lose_move) {
+    full_log_filename = "lose_move_" + full_log_filename;
+  } else {
+    full_log_filename = "do_not_lose_move_" + full_log_filename;
+  }
+  if (player == PLAYER2) {
+    full_log_filename = full_log_filename + "_P2";
+  } else if (player == PLAYER1) {
+    full_log_filename = full_log_filename + "_P1";
+  } else {
+    cerr << "Incorrect player passed" << endl;
+    exit(0);
+  }
+
   std::ofstream ofs;
-  ofs.open(LOG_FILENAME, std::ofstream::out | std::ofstream::trunc);
+  ofs.open(full_log_filename, std::ofstream::out | std::ofstream::trunc);
   ofs.close();
 
   GRBEnv env(true);
-  env.set("LogFile", LOG_FILENAME);
+  env.set("LogFile", full_log_filename);
   env.start();
   LinearProgram linear_program(lose_move, player, env);
   linear_program.ReadMatrices();
