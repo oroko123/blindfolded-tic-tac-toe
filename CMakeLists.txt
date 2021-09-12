@@ -17,12 +17,13 @@ enable_testing()
 
 add_executable(matrix_generator matrix_generator.cpp)
 add_executable(simulator simulator.cpp)
+add_executable(linear_program linear_program.cpp)
+add_executable(transpose_matrices transpose_matrices.cpp)
 
 add_executable(board_tests board_tests.cpp)
 add_executable(constants_tests constants_tests.cpp)
 add_executable(state_tests state_tests.cpp)
 add_executable(serializer_tests serializer_tests.cpp)
-add_executable(linear_program linear_program.cpp)
 
 
 add_test(board_tests board_tests)
@@ -37,3 +38,4 @@ target_link_libraries(serializer_tests ${GTEST_LIBRARIES} pthread)
 target_link_libraries(linear_program optimized ${GUROBI_CXX_LIBRARY} debug ${GUROBI_CXX_DEBUG_LIBRARY})
 target_link_libraries(linear_program ${GUROBI_LIBRARY})
 target_link_libraries(linear_program stdc++fs)
+target_link_libraries(transpose_matrices stdc++fs)

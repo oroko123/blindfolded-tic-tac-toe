@@ -15,16 +15,9 @@ public:
       : lose_move(lose_move_), player(player_), model(env) {
     model.set(GRB_IntParam_Method, GRB_METHOD_DUAL);
   }
-  LinearProgram(bool lose_move_, Player player_, const GRBEnv &env,
-                const map<array<PlayerKey, 2>, int> &P_,
-                const map<array<PlayerKey, 2>, int> &C_,
-                const map<array<PlayerKey, 2>, int> &D_)
-      : lose_move(lose_move_), player(player_), model(env), P(P_), C(C_),
-        D(D_) {
-    model.set(GRB_IntParam_Method, GRB_METHOD_DUAL);
-  }
   void Run() {
     AddStartingElements();
+    AssertMatrices();
     AddVariables();
     AddConstraints();
     SetObjective();
@@ -33,30 +26,72 @@ public:
   }
   void ReadMatrices() {
     cout << "Reading matrices" << endl;
-    std::string p_filename = GetMatrixFilename("P", lose_move);
-    std::string c_filename = GetMatrixFilename("C", lose_move);
-    std::string d_filename = GetMatrixFilename("D", lose_move);
-    if (!fs::exists(p_filename)) {
-      cout << "There is no P matrix in current dir" << endl;
-      exit(1);
-    }
-    if (!fs::exists(c_filename)) {
-      cout << "There is no C matrix in current dir" << endl;
-      exit(1);
-    }
-    if (!fs::exists(d_filename)) {
-      cout << "There is no D matrix in current dir" << endl;
-      exit(1);
-    }
-    try {
-      P = Serializer::read_from_file<array<PlayerKey, 2>, int>(p_filename);
-      C = Serializer::read_from_file<array<PlayerKey, 2>, int>(c_filename);
-      D = Serializer::read_from_file<array<PlayerKey, 2>, int>(d_filename);
-    } catch (const exception &e) {
-      cout << e.what();
+    if (player == PLAYER1) {
+      std::string pt_filename = GetMatrixFilename("PT", lose_move);
+      std::string ct_filename = GetMatrixFilename("CT", lose_move);
+      std::string d_filename = GetMatrixFilename("D", lose_move);
+      if (!fs::exists(pt_filename)) {
+        cout << "There is no P matrix in current dir" << endl;
+        exit(1);
+      }
+      if (!fs::exists(ct_filename)) {
+        cout << "There is no CT matrix in current dir" << endl;
+        exit(1);
+      }
+      if (!fs::exists(d_filename)) {
+        cout << "There is no DT matrix in current dir" << endl;
+        exit(1);
+      }
+      try {
+        PT = Serializer::read_from_file<array<PlayerKey, 2>, int>(pt_filename);
+        CT = Serializer::read_from_file<array<PlayerKey, 2>, int>(ct_filename);
+        D = Serializer::read_from_file<array<PlayerKey, 2>, int>(d_filename);
+      } catch (const exception &e) {
+        cout << e.what();
+      }
+    } else { // player == PLAYER2
+      std::string p_filename = GetMatrixFilename("P", lose_move);
+      std::string c_filename = GetMatrixFilename("C", lose_move);
+      std::string dt_filename = GetMatrixFilename("DT", lose_move);
+      if (!fs::exists(p_filename)) {
+        cout << "There is no P matrix in current dir" << endl;
+        exit(1);
+      }
+      if (!fs::exists(c_filename)) {
+        cout << "There is no C matrix in current dir" << endl;
+        exit(1);
+      }
+      if (!fs::exists(dt_filename)) {
+        cout << "There is no DT matrix in current dir" << endl;
+        exit(1);
+      }
+      try {
+        P = Serializer::read_from_file<array<PlayerKey, 2>, int>(p_filename);
+        C = Serializer::read_from_file<array<PlayerKey, 2>, int>(c_filename);
+        DT = Serializer::read_from_file<array<PlayerKey, 2>, int>(dt_filename);
+      } catch (const exception &e) {
+        cout << e.what();
+      }
     }
   }
-
+  void AssertMatrices() {
+    if (player == PLAYER1) {
+      assert(!PT.empty());
+      assert(!CT.empty());
+      assert(!D.empty());
+      assert(P.empty());
+      assert(C.empty());
+      assert(DT.empty());
+    }
+    if (player == PLAYER2) {
+      assert(PT.empty());
+      assert(CT.empty());
+      assert(D.empty());
+      assert(!P.empty());
+      assert(!C.empty());
+      assert(!DT.empty());
+    }
+  }
   void PrintSolutionToFile() {
     cout << "Writing solution to files..." << endl;
     map<PlayerKey, double> r_res;
@@ -87,23 +122,34 @@ public:
 
 private:
   void AddStartingElements() {
-    C.insert({{0, 0}, 1});
-    D.insert({{0, 0}, 1});
+    switch (player) {
+    case PLAYER1:
+      CT.insert({{0, 0}, 1});
+      D.insert({{0, 0}, 1});
+      break;
+    case PLAYER2:
+      C.insert({{0, 0}, 1});
+      DT.insert({{0, 0}, 1});
+      break;
+    default:
+      assert(false);
+      break;
+    }
   }
   void AddVariables() {
     cout << "Adding variables s and r" << endl;
-    for (const auto &[k, v] : C) {
-      (void)v;
-      player_states[PLAYER2].insert(get<0>(k));
-      player_actionstates[PLAYER2].insert(get<1>(k));
-    }
-    for (const auto &[k, v] : D) {
-      (void)v;
-      player_states[PLAYER1].insert(get<0>(k));
-      player_actionstates[PLAYER1].insert(get<1>(k));
-    }
     switch (player) {
     case PLAYER1:
+      for (const auto &[k, v] : CT) {
+        (void)v;
+        player_states[PLAYER2].insert(get<1>(k));
+        player_actionstates[PLAYER2].insert(get<0>(k));
+      }
+      for (const auto &[k, v] : D) {
+        (void)v;
+        player_states[PLAYER1].insert(get<0>(k));
+        player_actionstates[PLAYER1].insert(get<1>(k));
+      }
       for (auto b : player_actionstates[PLAYER1]) {
         s[b] = model.addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS);
       }
@@ -112,6 +158,16 @@ private:
       }
       break;
     case PLAYER2:
+      for (const auto &[k, v] : C) {
+        (void)v;
+        player_states[PLAYER2].insert(get<0>(k));
+        player_actionstates[PLAYER2].insert(get<1>(k));
+      }
+      for (const auto &[k, v] : DT) {
+        (void)v;
+        player_states[PLAYER1].insert(get<1>(k));
+        player_actionstates[PLAYER1].insert(get<0>(k));
+      }
       for (auto a : player_actionstates[PLAYER2]) {
         s[a] = model.addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS);
       }
@@ -135,54 +191,45 @@ private:
     int last_added_constraints = 0;
 
     if (player == PLAYER2) {
-      map<array<PlayerKey, 2>, int> DT;
-      for (const auto &[k, v] : D) {
-        PlayerKey j = get<0>(k);
-        PlayerKey b = get<1>(k);
-        DT.insert({{b, j}, v});
-      }
-      D.clear();
-      {
-        GRBLinExpr lhs, rhs;
-        auto p_it = P.begin();
-        auto dt_it = DT.begin();
-        for (auto b : player_actionstates[getOppositePlayer(player)]) {
-          while (p_it != P.end()) {
-            PlayerKey b_p = get<0>(p_it->first);
-            PlayerKey a = get<1>(p_it->first);
-            int v_p = p_it->second;
-            if (b_p == b) {
-              lhs += v_p * s[a];
-              p_it = P.erase(p_it);
-            } else {
-              break;
-            }
+      GRBLinExpr lhs, rhs;
+      auto p_it = P.begin();
+      auto dt_it = DT.begin();
+      for (auto b : player_actionstates[getOppositePlayer(player)]) {
+        while (p_it != P.end()) {
+          PlayerKey b_p = get<0>(p_it->first);
+          PlayerKey a = get<1>(p_it->first);
+          int v_p = p_it->second;
+          if (b_p == b) {
+            lhs += v_p * s[a];
+            p_it = P.erase(p_it);
+          } else {
+            break;
           }
-          while (dt_it != DT.end()) {
-            PlayerKey b_dt = get<0>(dt_it->first);
-            PlayerKey j = get<1>(dt_it->first);
-            int v_dt = dt_it->second;
-            if (b_dt == b) {
-              rhs += v_dt * r[j];
-              dt_it = DT.erase(dt_it);
-            } else {
-              break;
-            }
+        }
+        while (dt_it != DT.end()) {
+          PlayerKey b_dt = get<0>(dt_it->first);
+          PlayerKey j = get<1>(dt_it->first);
+          int v_dt = dt_it->second;
+          if (b_dt == b) {
+            rhs += v_dt * r[j];
+            dt_it = DT.erase(dt_it);
+          } else {
+            break;
           }
-          model.addConstr(lhs, GRB_LESS_EQUAL, rhs);
-          added_constraints += lhs.size() + rhs.size();
-          lhs.clear();
-          rhs.clear();
-          if (added_constraints - last_added_constraints > 10'000'000) {
-            cout << "Added " << added_constraints << " out of "
-                 << total_constraints << " ("
-                 << (float)added_constraints / total_constraints * 100 << ")%"
-                 << endl;
-            last_added_constraints = added_constraints;
-            auto curr = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed = curr - start;
-            cout << "Elapsed time: " << elapsed.count() << " s" << endl;
-          }
+        }
+        model.addConstr(lhs, GRB_LESS_EQUAL, rhs);
+        added_constraints += lhs.size() + rhs.size();
+        lhs.clear();
+        rhs.clear();
+        if (added_constraints - last_added_constraints > 10'000'000) {
+          cout << "Added " << added_constraints << " out of "
+               << total_constraints << " ("
+               << (float)added_constraints / total_constraints * 100 << ")%"
+               << endl;
+          last_added_constraints = added_constraints;
+          auto curr = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double> elapsed = curr - start;
+          cout << "Elapsed time: " << elapsed.count() << " s" << endl;
         }
       }
       assert(P.empty());
@@ -214,61 +261,45 @@ private:
     }
 
     if (player == PLAYER1) {
-      map<array<PlayerKey, 2>, int> PT;
-      map<array<PlayerKey, 2>, int> CT;
-      for (const auto &[k, v] : P) {
-        PlayerKey b = get<0>(k);
-        PlayerKey a = get<1>(k);
-        PT.insert({{a, b}, v});
-      }
-      P.clear();
-      for (const auto &[k, v] : C) {
-        PlayerKey i = get<0>(k);
-        PlayerKey a = get<1>(k);
-        CT.insert({{a, i}, v});
-      }
-      C.clear();
-      {
-        GRBLinExpr lhs, rhs;
-        auto pt_it = PT.begin();
-        auto ct_it = CT.begin();
-        for (auto a : player_actionstates[getOppositePlayer(player)]) {
-          while (pt_it != PT.end()) {
-            PlayerKey a_p = get<0>(pt_it->first);
-            PlayerKey b = get<1>(pt_it->first);
-            int v_p = pt_it->second;
-            if (a_p == a) {
-              lhs += -v_p * s[b];
-              pt_it = PT.erase(pt_it);
-            } else {
-              break;
-            }
+      GRBLinExpr lhs, rhs;
+      auto pt_it = PT.begin();
+      auto ct_it = CT.begin();
+      for (auto a : player_actionstates[getOppositePlayer(player)]) {
+        while (pt_it != PT.end()) {
+          PlayerKey a_p = get<0>(pt_it->first);
+          PlayerKey b = get<1>(pt_it->first);
+          int v_p = pt_it->second;
+          if (a_p == a) {
+            lhs += -v_p * s[b];
+            pt_it = PT.erase(pt_it);
+          } else {
+            break;
           }
-          while (ct_it != CT.end()) {
-            PlayerKey a_ct = get<0>(ct_it->first);
-            PlayerKey i = get<1>(ct_it->first);
-            int v_dt = ct_it->second;
-            if (a_ct == a) {
-              rhs += v_dt * r[i];
-              ct_it = CT.erase(ct_it);
-            } else {
-              break;
-            }
+        }
+        while (ct_it != CT.end()) {
+          PlayerKey a_ct = get<0>(ct_it->first);
+          PlayerKey i = get<1>(ct_it->first);
+          int v_dt = ct_it->second;
+          if (a_ct == a) {
+            rhs += v_dt * r[i];
+            ct_it = CT.erase(ct_it);
+          } else {
+            break;
           }
-          model.addConstr(lhs, GRB_LESS_EQUAL, rhs);
-          added_constraints += lhs.size() + rhs.size();
-          lhs.clear();
-          rhs.clear();
-          if (added_constraints - last_added_constraints > 10'000'000) {
-            cout << "Added " << added_constraints << " out of "
-                 << total_constraints << " ("
-                 << (float)added_constraints / total_constraints * 100 << ")%"
-                 << endl;
-            last_added_constraints = added_constraints;
-            auto curr = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed = curr - start;
-            cout << "Elapsed time: " << elapsed.count() << " s" << endl;
-          }
+        }
+        model.addConstr(lhs, GRB_LESS_EQUAL, rhs);
+        added_constraints += lhs.size() + rhs.size();
+        lhs.clear();
+        rhs.clear();
+        if (added_constraints - last_added_constraints > 10'000'000) {
+          cout << "Added " << added_constraints << " out of "
+               << total_constraints << " ("
+               << (float)added_constraints / total_constraints * 100 << ")%"
+               << endl;
+          last_added_constraints = added_constraints;
+          auto curr = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double> elapsed = curr - start;
+          cout << "Elapsed time: " << elapsed.count() << " s" << endl;
         }
       }
       assert(PT.empty());
@@ -328,6 +359,9 @@ private:
   map<array<PlayerKey, 2>, int> P;
   map<array<PlayerKey, 2>, int> C;
   map<array<PlayerKey, 2>, int> D;
+  map<array<PlayerKey, 2>, int> PT;
+  map<array<PlayerKey, 2>, int> CT;
+  map<array<PlayerKey, 2>, int> DT;
 };
 
 void run(bool lose_move, Player player) {
@@ -349,7 +383,7 @@ void run(bool lose_move, Player player) {
 
 int main() {
   try {
-    run(/*lose_move=*/true, /*player=*/PLAYER1);
+    run(/*lose_move=*/false, /*player=*/PLAYER1);
   } catch (GRBException e) {
     cout << e.getErrorCode() << endl;
     cout << e.getMessage() << endl;

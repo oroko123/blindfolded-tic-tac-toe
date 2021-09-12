@@ -25,18 +25,30 @@ std::string GetMatrixFilename(std::string name, bool lose_move) {
   const std::string DO_NOT_LOSE_MOVE_P_FILENAME = "do_not_lose_move_P";
   const std::string DO_NOT_LOSE_MOVE_C_FILENAME = "do_not_lose_move_C";
   const std::string DO_NOT_LOSE_MOVE_D_FILENAME = "do_not_lose_move_D";
+  const std::string DO_NOT_LOSE_MOVE_PT_FILENAME = "do_not_lose_move_PT";
+  const std::string DO_NOT_LOSE_MOVE_CT_FILENAME = "do_not_lose_move_CT";
+  const std::string DO_NOT_LOSE_MOVE_DT_FILENAME = "do_not_lose_move_DT";
 
   const std::string LOSE_MOVE_P_FILENAME = "lose_move_P";
   const std::string LOSE_MOVE_C_FILENAME = "lose_move_C";
   const std::string LOSE_MOVE_D_FILENAME = "lose_move_D";
-  const std::set<std::string> names({"P", "C", "D"});
+  const std::string LOSE_MOVE_PT_FILENAME = "lose_move_PT";
+  const std::string LOSE_MOVE_CT_FILENAME = "lose_move_CT";
+  const std::string LOSE_MOVE_DT_FILENAME = "lose_move_DT";
+  const std::set<std::string> names({"P", "C", "D", "PT", "CT", "DT"});
   assert(names.find(name) != names.end());
   if (name == "P") {
     return lose_move ? LOSE_MOVE_P_FILENAME : DO_NOT_LOSE_MOVE_P_FILENAME;
   } else if (name == "C") {
     return lose_move ? LOSE_MOVE_C_FILENAME : DO_NOT_LOSE_MOVE_C_FILENAME;
-  } else { // name == "D"
+  } else if (name == "D") {
     return lose_move ? LOSE_MOVE_D_FILENAME : DO_NOT_LOSE_MOVE_D_FILENAME;
+  } else if (name == "PT") {
+    return lose_move ? LOSE_MOVE_PT_FILENAME : DO_NOT_LOSE_MOVE_PT_FILENAME;
+  } else if (name == "CT") {
+    return lose_move ? LOSE_MOVE_CT_FILENAME : DO_NOT_LOSE_MOVE_CT_FILENAME;
+  } else { // name == "DT"
+    return lose_move ? LOSE_MOVE_DT_FILENAME : DO_NOT_LOSE_MOVE_DT_FILENAME;
   }
 }
 
