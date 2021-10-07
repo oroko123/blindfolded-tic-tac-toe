@@ -1,5 +1,5 @@
 #include "bits/stdc++.h"
-#include "constants.h"
+#include "constants2.h"
 #include "gurobi_c++.h"
 #include "serializer.h"
 
@@ -383,6 +383,9 @@ void run(bool lose_move, Player player) {
 
 int main() {
   try {
+    run(/*lose_move=*/false, /*player=*/PLAYER1);
+    run(/*lose_move=*/false, /*player=*/PLAYER2);
+    run(/*lose_move=*/true, /*player=*/PLAYER1);
     run(/*lose_move=*/true, /*player=*/PLAYER2);
   } catch (GRBException e) {
     cout << e.getErrorCode() << endl;

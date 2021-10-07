@@ -21,7 +21,7 @@ public:
     map<K, V> ret;
     while (stream.good()) {
       K key;
-      int value;
+      V value;
       stream.read((char *)&key, sizeof(key));
       stream.read((char *)&value, sizeof(value));
       ret.insert({key, value});

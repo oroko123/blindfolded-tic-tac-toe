@@ -36,6 +36,12 @@ public:
   }
   void printBoard() const { judge_board.print(); }
   Player getPlayerTurn() const { return player_turn; }
+  bool wasLastAccepted() const {
+    if (history.empty()) {
+      return false;
+    }
+    return get<2>(history.back());
+  }
 
   array<PlayerKey, 2> calculateRepresentativeStateKeyPair() const {
 
