@@ -384,6 +384,9 @@ void run(bool lose_move, Player player) {
 int main() {
   try {
     run(/*lose_move=*/false, /*player=*/PLAYER1);
+    run(/*lose_move=*/false, /*player=*/PLAYER2);
+    run(/*lose_move=*/true, /*player=*/PLAYER1);
+    run(/*lose_move=*/true, /*player=*/PLAYER2);
   } catch (GRBException e) {
     cout << e.getErrorCode() << endl;
     cout << e.getMessage() << endl;

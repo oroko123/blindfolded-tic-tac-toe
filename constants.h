@@ -117,7 +117,6 @@ char playerToSign(Player player) {
 
 const int SIMULATIONS_NUM = 1000;
 const int FIELDS_NUM = 9;
-const long long PROBABILITY_FACTOR = 64; // 2^6
 
 const std::vector<int> id = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 const std::vector<int> ox = {6, 7, 8, 3, 4, 5, 0, 1, 2};
