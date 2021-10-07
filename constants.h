@@ -115,7 +115,7 @@ char playerToSign(Player player) {
   }
 }
 
-const int SIMULATIONS_NUM = 10000;
+const int SIMULATIONS_NUM = 1000;
 const int FIELDS_NUM = 9;
 const long long PROBABILITY_FACTOR = 64; // 2^6
 

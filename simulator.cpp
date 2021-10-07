@@ -13,9 +13,9 @@ public:
   Result run() {
     while (game_state.getResult() == ONGOING) {
       Player player_turn = game_state.getPlayerTurn();
-      auto possible_moves = game_state.getPossibleMoves();
-      int move = agents[player_turn]->makeMove(possible_moves);
+      int move = agents[player_turn]->tryMakeMove();
       game_state = game_state.performMove(move);
+      agents[player_turn]->fetchStatus(game_state.wasLastAccepted());
     }
     return game_state.getResult();
   }
