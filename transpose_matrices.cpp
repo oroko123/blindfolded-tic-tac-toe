@@ -20,7 +20,8 @@ map<array<PlayerKey, 2>, int> TransposeMatrix(map<array<PlayerKey, 2>, int> m) {
 
 void Run(bool lose_move) {
   cout << "Reading matrices" << endl;
-  for (std::string matrix_name : {"P", "C", "D"}) {
+  //TODO include "P" matrix as well
+  for (std::string matrix_name : {"C", "D"}) {
     std::string matrix_filename = GetMatrixFilename(matrix_name, lose_move);
     if (fs::exists(matrix_filename)) {
       try {
