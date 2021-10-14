@@ -291,7 +291,7 @@ private:
         added_constraints += lhs.size() + rhs.size();
         lhs.clear();
         rhs.clear();
-        if (added_constraints - last_added_constraints > 10'000'000) {
+        if (added_constraints - last_added_constraints > 1) {
           cout << "Added " << added_constraints << " out of "
                << total_constraints << " ("
                << (float)added_constraints / total_constraints * 100 << ")%"
@@ -383,9 +383,9 @@ void run(bool lose_move, Player player) {
 
 int main() {
   try {
-    run(/*lose_move=*/false, /*player=*/PLAYER1);
+    // run(/*lose_move=*/false, /*player=*/PLAYER1);
     run(/*lose_move=*/false, /*player=*/PLAYER2);
-    run(/*lose_move=*/true, /*player=*/PLAYER1);
+    // run(/*lose_move=*/true, /*player=*/PLAYER1);
     run(/*lose_move=*/true, /*player=*/PLAYER2);
   } catch (GRBException e) {
     cout << e.getErrorCode() << endl;
