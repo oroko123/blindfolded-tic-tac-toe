@@ -186,11 +186,11 @@ private:
     std::chrono::_V2::system_clock::time_point start =
         std::chrono::high_resolution_clock::now();
     cout << "Adding constraints" << endl;
-    int total_constraints = D.size() + P.size() + C.size();
-    int added_constraints = 0;
-    int last_added_constraints = 0;
 
     if (player == PLAYER2) {
+      int total_constraints = DT.size() + P.size() + C.size();
+      int added_constraints = 0;
+      int last_added_constraints = 0;
       GRBLinExpr lhs, rhs;
       auto p_it = P.begin();
       auto dt_it = DT.begin();
@@ -261,6 +261,9 @@ private:
     }
 
     if (player == PLAYER1) {
+      int total_constraints = D.size() + PT.size() + CT.size();
+      int added_constraints = 0;
+      int last_added_constraints = 0;
       GRBLinExpr lhs, rhs;
       auto pt_it = PT.begin();
       auto ct_it = CT.begin();
@@ -291,7 +294,7 @@ private:
         added_constraints += lhs.size() + rhs.size();
         lhs.clear();
         rhs.clear();
-        if (added_constraints - last_added_constraints > 1) {
+        if (added_constraints - last_added_constraints > 10'000'000) {
           cout << "Added " << added_constraints << " out of "
                << total_constraints << " ("
                << (float)added_constraints / total_constraints * 100 << ")%"
