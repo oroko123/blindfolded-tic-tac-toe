@@ -238,7 +238,7 @@ private:
         GRBLinExpr lhs;
         int rhs_const = 1;
         auto c_it = C.begin();
-        int curr_i = get<0>(c_it->first);
+        PlayerKey curr_i = get<0>(c_it->first);
         while (c_it != C.end()) {
           PlayerKey i = get<0>(c_it->first);
           PlayerKey a = get<1>(c_it->first);
@@ -282,9 +282,9 @@ private:
         while (ct_it != CT.end()) {
           PlayerKey a_ct = get<0>(ct_it->first);
           PlayerKey i = get<1>(ct_it->first);
-          int v_dt = ct_it->second;
+          int v_ct = ct_it->second;
           if (a_ct == a) {
-            rhs += v_dt * r[i];
+            rhs += v_ct * r[i];
             ct_it = CT.erase(ct_it);
           } else {
             break;
@@ -311,7 +311,7 @@ private:
         GRBLinExpr lhs;
         int rhs_const = 1;
         auto d_it = D.begin();
-        int curr_j = get<0>(d_it->first);
+        PlayerKey curr_j = get<0>(d_it->first);
         while (d_it != D.end()) {
           PlayerKey j = get<0>(d_it->first);
           PlayerKey b = get<1>(d_it->first);
