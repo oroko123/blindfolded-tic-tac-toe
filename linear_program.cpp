@@ -342,6 +342,9 @@ private:
     P.clear();
     C.clear();
     D.clear();
+    PT.clear();
+    CT.clear();
+    DT.clear();
     for (auto player : {PLAYER1, PLAYER2}) {
       player_states[player].clear();
       player_actionstates[player].clear();
