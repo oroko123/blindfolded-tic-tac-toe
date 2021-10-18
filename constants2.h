@@ -7,6 +7,7 @@ using namespace std;
 enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
 enum Player { PLAYER1, PLAYER2, NONE }; // WARNING!!! DO NOT CHANGE THE ORDER
 
+int SECONDS_IN_24_HOURS = 24 * 60 * 60;
 
 std::string GetLogFilename(bool lose_move, Player player) {
   std::string full_log_filename = "linear_program_log";
@@ -130,8 +131,7 @@ const vector<int> deg_90 = {1, 3, 0, 2};
 const vector<int> deg_180 = {3, 2, 1, 0};
 const vector<int> deg_270 = {2, 0, 3, 1};
 const vector<vector<int>> permutations = {id,       ox,     oy,      diag,
-                                          sec_diag, deg_90, deg_180,
-                                          deg_270};
+                                          sec_diag, deg_90, deg_180, deg_270};
 
 // const vector<vector<int>> permutations = {
 //     {0, 1, 2, 3}, {0, 1, 3, 2}, {0, 2, 1, 3}, {0, 2, 3, 1}, {0, 3, 1, 2},
