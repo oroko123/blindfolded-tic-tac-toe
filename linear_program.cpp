@@ -9,65 +9,12 @@ using namespace std;
 
 namespace fs = std::experimental::filesystem;
 
-void PrintSolutionToFile(const map<PlayerKey, GRBVar> &r,
-                         const map<PlayerKey, GRBVar> &s, Player player,
-                         bool lose_move) {
-  cout << "Started writing solution to files..." << endl;
-  map<PlayerKey, double> r_res;
-  for (auto &[k, v] : r) {
-    r_res[k] = v.get(GRB_DoubleAttr_X);
-  }
-  map<PlayerKey, double> s_res;
-  for (auto &[k, v] : s) {
-    s_res[k] = v.get(GRB_DoubleAttr_X);
-  }
-  Serializer::write_to_file(GetOutputFilename("R", player, lose_move), r_res,
-                            false);
-  Serializer::write_to_file(GetOutputFilename("S", player, lose_move), s_res,
-                            false);
-  cout << "Ended writing solution to files..." << endl;
-}
-
-class PerformanceCallback : public GRBCallback {
-public:
-  unique_ptr<map<PlayerKey, GRBVar>> currentR; // Current state of vector r
-  unique_ptr<map<PlayerKey, GRBVar>> currentS; // Current state of vector s
-  double lastTime;
-  Player player;
-  bool lose_move;
-  PerformanceCallback(map<PlayerKey, GRBVar> *currentR_,
-                      map<PlayerKey, GRBVar> *currentS_, Player player_,
-                      bool lose_move_)
-      : currentR(currentR_), currentS(currentS_), lastTime(0.), player(player_),
-        lose_move(lose_move_) {}
-
-protected:
-  void callback() {
-    try {
-      if (where == GRB_CB_SIMPLEX) {
-        double currTime = getDoubleInfo(GRB_CB_RUNTIME);
-        if (currTime - lastTime >= SECONDS_IN_24_HOURS) {
-          lastTime = currTime;
-          PrintSolutionToFile(*currentR, *currentS, player, lose_move);
-        }
-      }
-    } catch (GRBException e) {
-      cout << "Error number: " << e.getErrorCode() << endl;
-      cout << e.getMessage() << endl;
-    } catch (...) {
-      cout << "Error during callback" << endl;
-    }
-  }
-};
-
 class LinearProgram {
 public:
   LinearProgram(bool lose_move_, Player player_, const GRBEnv &env)
       : lose_move(lose_move_), player(player_), model(env) {
     model.set(GRB_IntParam_Method, GRB_METHOD_DUAL);
   }
-  map<PlayerKey, GRBVar> r;
-  map<PlayerKey, GRBVar> s;
   void Run() {
     AddStartingElements();
     AssertMatrices();
@@ -145,6 +92,22 @@ public:
       assert(!DT.empty());
     }
   }
+  void PrintSolutionToFile() {
+    cout << "Writing solution to files..." << endl;
+    map<PlayerKey, double> r_res;
+    for (auto &[k, v] : r) {
+      r_res[k] = v.get(GRB_DoubleAttr_X);
+    }
+    map<PlayerKey, double> s_res;
+    for (auto &[k, v] : s) {
+      s_res[k] = v.get(GRB_DoubleAttr_X);
+    }
+    Serializer::write_to_file(GetOutputFilename("R", player, lose_move), r_res,
+                              false);
+    Serializer::write_to_file(GetOutputFilename("S", player, lose_move), s_res,
+                              false);
+    cout << "Calculated result: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
+  }
 
   void PrintSolutionToScreen() {
     cout << "r:" << endl;
@@ -155,7 +118,6 @@ public:
     for (auto &[k, v] : s) {
       cout << k << ": " << v.get(GRB_DoubleAttr_X) << endl;
     }
-    cout << "Calculated result: " << model.get(GRB_DoubleAttr_ObjVal) << endl;
   }
 
 private:
@@ -391,13 +353,13 @@ private:
   void Solve() {
     model.write(GetOutputFilename("LINEAR_PROGRAM", player, lose_move));
     cout << "Solving" << endl;
-    PerformanceCallback callback(&r, &s, player, lose_move);
-    model.setCallback(&callback);
     model.optimize();
   }
   bool lose_move;
   Player player;
   GRBModel model;
+  map<PlayerKey, GRBVar> r;
+  map<PlayerKey, GRBVar> s;
   set<PlayerKey> player_states[2];       // [J, I]
   set<PlayerKey> player_actionstates[2]; // [B, A]
   map<array<PlayerKey, 2>, int> P;
@@ -421,7 +383,7 @@ void run(bool lose_move, Player player) {
   LinearProgram linear_program(lose_move, player, env);
   linear_program.ReadMatrices();
   linear_program.Run();
-  PrintSolutionToFile(linear_program.r, linear_program.s, player, lose_move);
+  linear_program.PrintSolutionToFile();
   linear_program.PrintSolutionToScreen();
 }
 

@@ -6,8 +6,6 @@
 enum Result { TIE, PLAYER1WIN, PLAYER2WIN, ONGOING, INVALID };
 enum Player { PLAYER1, PLAYER2, NONE }; // WARNING!!! DO NOT CHANGE THE ORDER
 
-int SECONDS_IN_24_HOURS = 24 * 60 * 60;
-
 std::string GetLogFilename(bool lose_move, Player player) {
   std::string full_log_filename = "linear_program_log";
   if (lose_move) {
