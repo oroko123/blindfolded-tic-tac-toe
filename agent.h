@@ -135,9 +135,7 @@ struct Node {
   int right_sibling_id;
 };
 
-bool operator <(const Node &lhs, const Node &rhs) {
-  return lhs.id < rhs.id;
-}
+bool operator<(const Node &lhs, const Node &rhs) { return lhs.id < rhs.id; }
 
 struct TreeBasedStrategy {
   map<int, Node> tree;
@@ -172,7 +170,10 @@ public:
     tree[21] = {21, 2, -1, -1};
     strategy = TreeBasedStrategy{tree, 0};
   }
-  int tryMakeMove() { return strategy.current_node; }
+  int tryMakeMove() {
+    assert(strategy.current_node != -1);
+    return strategy.tree[strategy.current_node].field;
+  }
   virtual void fetchStatus(bool success) {
     if (success) {
       strategy.current_node =

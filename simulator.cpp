@@ -8,8 +8,8 @@ using namespace std;
 class Simulator {
 public:
   Simulator(bool lose_move)
-      : agents({new MatrixAgent(lose_move, PLAYER1),
-                new MatrixAgent(lose_move, PLAYER2)}),
+      : agents({new Player1NotLosingAgent1(),
+                new RandomAgent()}),
         game_state(lose_move) {}
 
   Result run() {
@@ -29,6 +29,7 @@ private:
 };
 
 int main() {
+  int tie_res = 0;
   int agent1_res = 0;
   int agent2_res = 0;
   for (int i = 0; i < SIMULATIONS_NUM; i++) {
@@ -38,15 +39,16 @@ int main() {
     }
     Result res = simulator.run();
     if (res == TIE) {
-      agent1_res++;
-      agent2_res++;
+      tie_res++;
     } else if (res == PLAYER1WIN) {
-      agent1_res += 2;
+      agent1_res ++;
     } else { // res == PLAYER2WIN
-      agent2_res += 2;
+      agent2_res ++;
     }
   }
-  cout << "Score 1: " << agent1_res << endl;
-  cout << "Score 2: " << agent2_res << endl;
+  cout << "Player 1 wins: " << agent1_res << endl;
+  cout << "Ties: " << tie_res << endl;
+  cout << "Player 2 wins: " << agent2_res << endl;
+  cout << "Estimated game value: " << double(agent1_res - agent2_res) / SIMULATIONS_NUM << endl;
   return 0;
 }
