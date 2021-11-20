@@ -7,10 +7,10 @@ using namespace std;
 
 class Simulator {
 public:
-  Simulator()
-      : agents({new MatrixAgent(/*lose_move_=*/true, PLAYER1),
-                new MatrixAgent(/*lose_move_=*/true, PLAYER2)}),
-        game_state(/*lose_move_=*/true) {}
+  Simulator(bool lose_move)
+      : agents({new MatrixAgent(lose_move, PLAYER1),
+                new MatrixAgent(lose_move, PLAYER2)}),
+        game_state(lose_move) {}
 
   Result run() {
     while (game_state.getResult() == ONGOING) {
@@ -31,7 +31,7 @@ int main() {
   int agent1_res = 0;
   int agent2_res = 0;
   for (int i = 0; i < SIMULATIONS_NUM; i++) {
-    Simulator simulator;
+    Simulator simulator(/*lose_move=*/false);
     if (i % 100 == 0) {
       cerr << "SIMULATION NO. " << i << endl;
     }
