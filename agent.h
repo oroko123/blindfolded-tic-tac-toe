@@ -90,11 +90,8 @@ std::vector<int> POSSIBLE_MOVES = {0, 1, 2, 3};
 class MatrixAgent : public Agent {
 public:
   MatrixAgent(bool lose_move, Player player) : dev(), rng(dev()) {
-    s = Serializer::read_from_file<PlayerKey, double>(GetOutputFilename("S", player, lose_move));
-    // cout << "PLAYER: " << player << endl;
-    // for (auto [k, v] : s) {
-    //   cout << "k:" << k << " v: " << v << endl;
-    // }
+    s = Serializer::read_from_file<PlayerKey, double>(
+        GetOutputFilename("S", player, lose_move));
   }
   int tryMakeMove() {
     // cerr << "key: " << calculateRepresentativeActionKey(history) << endl;
@@ -130,4 +127,69 @@ private:
   std::random_device dev;
   std::mt19937 rng;
 };
+
+struct Node {
+  int id;
+  int field;
+  int leftmost_child_id;
+  int right_sibling_id;
+};
+
+bool operator <(const Node &lhs, const Node &rhs) {
+  return lhs.id < rhs.id;
+}
+
+struct TreeBasedStrategy {
+  map<int, Node> tree;
+  int current_node;
+};
+
+class Player1NotLosingAgent1 : public Agent {
+public:
+  Player1NotLosingAgent1() {
+    map<int, Node> tree;
+    tree[0] = {0, 4, 1, -1};
+    tree[1] = {1, 1, 3, 2};
+    tree[2] = {2, 0, 6, -1};
+    tree[3] = {3, 7, -1, 4};
+    tree[4] = {4, 6, 8, 5};
+    tree[5] = {5, 8, 11, -1};
+    tree[6] = {6, 8, -1, 7};
+    tree[7] = {7, 6, 13, -1};
+    tree[8] = {8, 2, -1, 9};
+    tree[9] = {9, 5, 15, 10};
+    tree[10] = {10, 8, 18, -1};
+    tree[11] = {11, 0, -1, 12};
+    tree[12] = {12, 3, 20, -1};
+    tree[13] = {13, 3, -1, 14};
+    tree[14] = {14, 2, -1, -1};
+    tree[15] = {15, 3, -1, 16};
+    tree[16] = {16, 0, -1, 17};
+    tree[17] = {17, 8, -1, -1};
+    tree[18] = {18, 0, -1, 19};
+    tree[19] = {19, 3, -1, -1};
+    tree[20] = {20, 5, -1, 21};
+    tree[21] = {21, 2, -1, -1};
+    strategy = TreeBasedStrategy{tree, 0};
+  }
+  int tryMakeMove() { return strategy.current_node; }
+  virtual void fetchStatus(bool success) {
+    if (success) {
+      strategy.current_node =
+          strategy.tree[strategy.current_node].leftmost_child_id;
+    } else {
+      strategy.current_node =
+          strategy.tree[strategy.current_node].right_sibling_id;
+    }
+  }
+  static string getStrategyName() {
+    return "Not losing agent for player1 of do_not_lose_move version. Source: "
+           "https://twitter.com/peakNiche/status/1074752119373225984, user "
+           "Justin";
+  }
+
+private:
+  TreeBasedStrategy strategy;
+};
+
 #endif
