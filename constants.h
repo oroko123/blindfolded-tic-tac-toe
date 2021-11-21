@@ -115,8 +115,16 @@ char playerToSign(Player player) {
   }
 }
 
-const int SIMULATIONS_NUM = 10000;
+const int SIMULATIONS_NUM = 100000;
 const int FIELDS_NUM = 9;
+const std::vector<int> all_fields_vec = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+const std::vector<int> corner_fields_vec = {0, 2, 6, 8};
+const std::vector<int> side_fields_vec = {1, 3, 5, 7};
+const std::vector<int> middle_fields_vec = {4};
+
+const std::vector<std::vector<int>> winning_sets = {
+    {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6},
+    {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6}};
 
 const std::vector<int> id = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 const std::vector<int> ox = {6, 7, 8, 3, 4, 5, 0, 1, 2};

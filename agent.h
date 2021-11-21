@@ -17,7 +17,9 @@ public:
 
 class RandomAgent : public Agent {
 public:
-  RandomAgent() : dev(), rng(dev()) {}
+  RandomAgent()
+      : dev(), rng(dev()),
+        possible_moves(all_fields_vec.begin(), all_fields_vec.end()) {}
   int tryMakeMove() {
     std::uniform_int_distribution<std::mt19937::result_type> dist(
         0, possible_moves.size() - 1);
@@ -32,15 +34,15 @@ public:
   static string getStrategyName() { return "Random available field agent"; }
 
 private:
-  std::set<int> possible_moves = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-  int current_guess;
   std::random_device dev;
   std::mt19937 rng;
+  std::set<int> possible_moves;
+  int current_guess;
 };
 
 class FirstMoveAgent : public Agent {
 public:
-  FirstMoveAgent() {}
+  FirstMoveAgent() : possible_moves(all_fields_vec) {}
   int tryMakeMove() {
     current_guess = possible_moves[0];
     return current_guess;
@@ -52,7 +54,7 @@ public:
   static string getStrategyName() { return "First available field agent"; }
 
 private:
-  std::vector<int> possible_moves = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+  std::vector<int> possible_moves;
   int current_guess;
 };
 
@@ -85,7 +87,6 @@ calculateRepresentativeActionKey(const vector<pair<int, bool>> &history) {
   }
   return player_max_key;
 }
-std::vector<int> POSSIBLE_MOVES = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 
 class MatrixAgent : public Agent {
 public:
@@ -96,9 +97,9 @@ public:
   int tryMakeMove() {
     double base = s[calculateRepresentativeActionKey(history)];
     vector<double> move_chances;
-    for (auto MOVE : POSSIBLE_MOVES) {
+    for (auto move : all_fields_vec) {
       vector<pair<int, bool>> action_history = history;
-      action_history.push_back({MOVE, false});
+      action_history.push_back({move, false});
       PlayerKey action_key = calculateRepresentativeActionKey(action_history);
       double new_chance = s[action_key] / base;
       move_chances.push_back(new_chance);
@@ -298,4 +299,107 @@ public:
 private:
   TreeBasedStrategy strategy;
 };
+
+class HeuristicAgent : public Agent {
+public:
+  HeuristicAgent(int type_)
+      : type(type_), dev(), rng(dev()),
+        possible_moves(all_fields_vec.begin(), all_fields_vec.end()) {}
+
+  struct Result {
+    int field;
+    bool success;
+  };
+  Result tryCertainType(const vector<int> &options) {
+    vector<int> possible_options;
+    for (auto i : options) {
+      if (possible_moves.count(i) == 1) {
+        possible_options.push_back(i);
+      }
+    }
+    if (possible_options.empty()) {
+      return {-1, false};
+    }
+    std::uniform_int_distribution<std::mt19937::result_type> dist(
+        0, possible_options.size() - 1);
+    return {*std::next(possible_options.begin(), dist(rng)), true};
+  }
+  Result tryThreeInRow() {
+    for (auto &winning_set : winning_sets) {
+      for (auto &moves_vec : {my_fields, enemy_fields}) {
+        if (moves_vec.count(winning_set[0]) == 1 &&
+            moves_vec.count(winning_set[1]) == 1 &&
+            possible_moves.count(winning_set[2]) == 1) {
+          return {winning_set[2], true};
+        }
+        if (moves_vec.count(winning_set[0]) == 1 &&
+            possible_moves.count(winning_set[1]) == 1 &&
+            moves_vec.count(winning_set[2]) == 1) {
+          return {winning_set[1], true};
+        }
+        if (possible_moves.count(winning_set[0]) == 1 &&
+            moves_vec.count(winning_set[1]) == 1 &&
+            moves_vec.count(winning_set[2]) == 1) {
+          return {winning_set[0], true};
+        }
+      }
+    }
+    return {-1, false};
+  }
+  int tryMakeMove() {
+    Result result{-1, false};
+    result = tryThreeInRow();
+    if (result.success) {
+      current_guess = result.field;
+      return current_guess;
+    }
+    if (type == 1) {
+      result = tryCertainType(middle_fields_vec);
+      if (result.success) {
+        current_guess = result.field;
+        return current_guess;
+      }
+    }
+    result = tryCertainType(corner_fields_vec);
+    if (result.success) {
+      current_guess = result.field;
+      return current_guess;
+    }
+    result = tryCertainType(side_fields_vec);
+    if (result.success) {
+      current_guess = result.field;
+      return current_guess;
+    }
+    if (type == 2) {
+      result = tryCertainType(middle_fields_vec);
+      if (result.success) {
+        current_guess = result.field;
+        return current_guess;
+      }
+    }
+    assert(result.success);
+    current_guess = result.field;
+    return current_guess;
+  }
+  virtual void fetchStatus(bool success) {
+    possible_moves.erase(current_guess);
+    if (success) {
+      my_fields.insert(current_guess);
+    } else {
+      enemy_fields.insert(current_guess);
+    }
+  }
+
+  static string getStrategyName() { return "Heuristic agent"; }
+
+private:
+  int type;
+  std::random_device dev;
+  std::mt19937 rng;
+  std::set<int> possible_moves;
+  std::set<int> my_fields;
+  std::set<int> enemy_fields;
+  int current_guess;
+};
+
 #endif
