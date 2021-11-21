@@ -186,4 +186,99 @@ private:
   TreeBasedStrategy strategy;
 };
 
+class Player1NotLosingAgent2 : public Agent {
+public:
+  Player1NotLosingAgent2() {
+    map<int, Node> tree;
+    tree[0] = {0, 4, 1, -1};
+    tree[1] = {1, 1, 3, 2};
+    tree[2] = {2, 0, 6, -1};
+    tree[3] = {3, 7, -1, 4};
+    tree[4] = {4, 6, 8, 5};
+    tree[5] = {5, 8, 11, -1};
+    tree[6] = {6, 8, -1, 7};
+    tree[7] = {7, 6, 13, -1};
+    tree[8] = {8, 2, -1, 9};
+    tree[9] = {9, 5, 15, 10};
+    tree[10] = {10, 8, 18, -1};
+    tree[11] = {11, 0, -1, 12};
+    tree[12] = {12, 3, 20, -1};
+    tree[13] = {13, 3, -1, 14};
+    tree[14] = {14, 2, -1, -1};
+    tree[15] = {15, 3, -1, 16};
+    tree[16] = {16, 0, -1, 17};
+    tree[17] = {17, 8, -1, -1};
+    tree[18] = {18, 0, -1, 19};
+    tree[19] = {19, 3, -1, -1};
+    tree[20] = {20, 5, -1, 21};
+    tree[21] = {21, 2, -1, -1};
+    strategy = TreeBasedStrategy{tree, 0};
+  }
+  int tryMakeMove() {
+    assert(strategy.current_node != -1);
+    return strategy.tree[strategy.current_node].field;
+  }
+  virtual void fetchStatus(bool success) {
+    if (success) {
+      strategy.current_node =
+          strategy.tree[strategy.current_node].leftmost_child_id;
+    } else {
+      strategy.current_node =
+          strategy.tree[strategy.current_node].right_sibling_id;
+    }
+  }
+  static string getStrategyName() {
+    return "Not losing agent for player1 of do_not_lose_move version. Source: "
+           "https://fivethirtyeight.com/features/santa-needs-some-help-with-math/, user "
+           "Barry King";
+  }
+
+private:
+  TreeBasedStrategy strategy;
+};
+
+
+class Player1NotLosingAgent3 : public Agent {
+public:
+  Player1NotLosingAgent3() {
+    map<int, Node> tree;
+    tree[0] = {0, 1, 1, -1};
+    tree[1] = {1, 4, 2, 10};
+    tree[2] = {2, 7, -1, 3};
+    tree[3] = {3, 8, 4, 7};
+    tree[4] = {4, 0, -1, 5};
+    tree[5] = {5, 3, -1, 6};
+    tree[6] = {6, 6, -1, -1};
+    tree[7] = {7, 6, 8, -1};
+    tree[8] = {8, 2, -1, 9};
+    tree[9] = {9, 5, -1, -1};
+    tree[10] = {10, 0, 11, -1};
+    tree[11] = {11, 2, -1, 12};
+    tree[12] = {12, 6, 13, -1};
+    tree[13] = {13, 2, -1, 14};
+    tree[14] = {14, 5, -1, -1};
+    strategy = TreeBasedStrategy{tree, 0};
+  }
+  int tryMakeMove() {
+    assert(strategy.current_node != -1);
+    return strategy.tree[strategy.current_node].field;
+  }
+  virtual void fetchStatus(bool success) {
+    if (success) {
+      strategy.current_node =
+          strategy.tree[strategy.current_node].leftmost_child_id;
+    } else {
+      strategy.current_node =
+          strategy.tree[strategy.current_node].right_sibling_id;
+    }
+  }
+  static string getStrategyName() {
+    return "Not losing agent for player1 of do_not_lose_move version. Source: "
+           "https://fivethirtyeight.com/features/santa-needs-some-help-with-math/, user "
+           "Kenny Long";
+  }
+
+private:
+  TreeBasedStrategy strategy;
+};
 #endif
