@@ -6,12 +6,13 @@
 using namespace std;
 
 const bool DEBUG = false;
+const bool LOSE_MOVE = true;
 
 class Simulator {
 public:
   Simulator(bool lose_move)
-      : agents({new Player1NotLosingAgent3(),
-                new RandomAgent()}),
+      : agents({new HeuristicAgent(1),
+                new HeuristicAgent(2)}),
         game_state(lose_move) {}
 
   Result run() {
@@ -38,7 +39,7 @@ int main() {
   int agent1_res = 0;
   int agent2_res = 0;
   for (int i = 0; i < SIMULATIONS_NUM; i++) {
-    Simulator simulator(/*lose_move=*/false);
+    Simulator simulator(LOSE_MOVE);
     if (i % 100 == 0) {
       cerr << "SIMULATION NO. " << i << endl;
     }

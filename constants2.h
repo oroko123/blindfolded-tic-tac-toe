@@ -118,9 +118,16 @@ char playerToSign(Player player) {
   }
 }
 
-const int SIMULATIONS_NUM = 10000;
+const int SIMULATIONS_NUM = 100000;
 const int FIELDS_NUM = 4;
-// const long long PROBABILITY_FACTOR = 64 * 3 * 3; // 2^6
+const std::vector<int> all_fields_vec = {0, 1, 2, 3};
+const std::vector<int> corner_fields_vec = {0, 1, 2, 3};
+const std::vector<int> side_fields_vec = {};
+const std::vector<int> middle_fields_vec = {};
+
+const vector<vector<int>> winning_sets = {
+    {0, 1}, {0, 2}, {0, 3}, {1, 2},
+    {1, 3}, {2, 3}};
 
 const vector<int> id = {0, 1, 2, 3};
 const vector<int> ox = {2, 3, 0, 1};
@@ -133,14 +140,6 @@ const vector<int> deg_270 = {2, 0, 3, 1};
 const vector<vector<int>> permutations = {id,       ox,     oy,      diag,
                                           sec_diag, deg_90, deg_180, deg_270};
 
-// const vector<vector<int>> permutations = {
-//     {0, 1, 2, 3}, {0, 1, 3, 2}, {0, 2, 1, 3}, {0, 2, 3, 1}, {0, 3, 1, 2},
-//     {0, 3, 2, 1}, {1, 0, 2, 3}, {1, 0, 3, 2}, {1, 2, 0, 3}, {1, 2, 3, 0},
-//     {1, 3, 0, 2}, {1, 3, 2, 0}, {2, 0, 1, 3}, {2, 0, 3, 1}, {2, 1, 0, 3},
-//     {2, 1, 3, 0}, {2, 3, 0, 1}, {2, 3, 1, 0}, {3, 0, 1, 2}, {3, 0, 2, 1},
-//     {3, 1, 0, 2}, {3, 1, 2, 0}, {3, 2, 0, 1}, {3, 2, 1, 0}};
-
-// const vector<vector<int>> permutations = {{0, 1, 2, 3}};
 constexpr Player getOppositePlayer(Player player) {
   if (player == PLAYER1) {
     return PLAYER2;

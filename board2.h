@@ -64,11 +64,6 @@ public:
 
 private:
   vector<Player> fields;
-  static const vector<vector<int>> winning_sets;
 };
-
-const vector<vector<int>> Board2::winning_sets = {
-    {0, 1}, {0, 2}, {0, 3}, {1, 2},
-    {1, 3}, {2, 3}};
 
 #endif
