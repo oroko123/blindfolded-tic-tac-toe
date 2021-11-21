@@ -5,10 +5,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+const bool DEBUG = false;
+
 class Simulator {
 public:
   Simulator(bool lose_move)
-      : agents({new Player1NotLosingAgent1(),
+      : agents({new Player1NotLosingAgent3(),
                 new RandomAgent()}),
         game_state(lose_move) {}
 
@@ -18,6 +20,9 @@ public:
       int move = agents[player_turn]->tryMakeMove();
       game_state = game_state.performMove(move);
       agents[player_turn]->fetchStatus(game_state.wasLastAccepted());
+      if (DEBUG) {
+        game_state.printBoard();
+      }
     }
     return game_state.getResult();
   }

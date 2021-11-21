@@ -236,14 +236,14 @@ public:
   }
   static string getStrategyName() {
     return "Not losing agent for player1 of do_not_lose_move version. Source: "
-           "https://fivethirtyeight.com/features/santa-needs-some-help-with-math/, user "
+           "https://fivethirtyeight.com/features/"
+           "santa-needs-some-help-with-math/, user "
            "Barry King";
   }
 
 private:
   TreeBasedStrategy strategy;
 };
-
 
 class Player1NotLosingAgent3 : public Agent {
 public:
@@ -254,16 +254,32 @@ public:
     tree[2] = {2, 7, -1, 3};
     tree[3] = {3, 8, 4, 7};
     tree[4] = {4, 0, -1, 5};
-    tree[5] = {5, 3, -1, 6};
-    tree[6] = {6, 6, -1, -1};
+    tree[5] = {5, 3, 15, 6};
+    tree[6] = {6, 6, 19, -1};
     tree[7] = {7, 6, 8, -1};
     tree[8] = {8, 2, -1, 9};
-    tree[9] = {9, 5, -1, -1};
+    tree[9] = {9, 5, 17, -1};
     tree[10] = {10, 0, 11, -1};
     tree[11] = {11, 2, -1, 12};
     tree[12] = {12, 6, 13, -1};
-    tree[13] = {13, 2, -1, 14};
-    tree[14] = {14, 5, -1, -1};
+    tree[13] = {13, 3, -1, 14};
+    tree[14] = {14, 5, 22, -1};
+    /* all the below actions weren't mentioned by author, as they don't affect
+     * the outcome. I added them to ensure the completeness (i.e. that every
+     * possible game will be played to the end using this agent.) */
+    // finishing for state 5
+    tree[15] = {15, 5, -1, 16};
+    tree[16] = {16, 6, -1, 21};
+    tree[21] = {21, 2, -1, -1};
+    // finishing for state 9
+    tree[17] = {17, 0, -1, 18};
+    tree[18] = {18, 3, -1, -1};
+    // finishing for state 6
+    tree[19] = {19, 2, -1, 20};
+    tree[20] = {20, 5, -1, -1};
+    // finishing for state 14
+    tree[22] = {22, 7, -1, 23};
+    tree[23] = {23, 8, -1, -1};
     strategy = TreeBasedStrategy{tree, 0};
   }
   int tryMakeMove() {
@@ -281,7 +297,8 @@ public:
   }
   static string getStrategyName() {
     return "Not losing agent for player1 of do_not_lose_move version. Source: "
-           "https://fivethirtyeight.com/features/santa-needs-some-help-with-math/, user "
+           "https://fivethirtyeight.com/features/"
+           "santa-needs-some-help-with-math/, user "
            "Kenny Long";
   }
 
